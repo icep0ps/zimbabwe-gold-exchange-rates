@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { currency } from '@/types';
-import convert from '@/utils/convert';
-import ConverterModule from './components/converterModule';
-import { FC, useEffect, useState } from 'react';
+import { currency } from "@/types";
+import ConverterModule from "./components/converterModule";
+import { FC, useEffect, useState } from "react";
+import { convert } from "@/lib/utils";
 
 type Props = {
   rate: currency;
@@ -12,23 +12,23 @@ type Props = {
 
 const CurrencyConverter: FC<Props> = (props) => {
   const [secondaryCurrency, setSecondaryCurrency] = useState<currency>(
-    props.rates.filter((currency) => currency.currency.trim() === 'USD')[0]
+    props.rates.filter((currency) => currency.currency.trim() === "USD")[0],
   );
 
   const [primaryAmout, setPriamaryAmount] = useState<string>(
-    secondaryCurrency.mid_zwl.toString()
+    secondaryCurrency.mid_zwl.toString(),
   );
 
   const [secondaryAmount, setSecondaryAmount] = useState<string>(
-    Number(props.rate.ask).toFixed(2).toString()
+    Number(props.rate.ask).toFixed(2).toString(),
   );
 
   useEffect(() => {
     setSecondaryAmount(
-      convert('primary', primaryAmout, {
+      convert("primary", primaryAmout, {
         primary: props.rate,
         secondary: secondaryCurrency,
-      })
+      }),
     );
   }, [secondaryCurrency.currency]);
 
@@ -39,8 +39,9 @@ const CurrencyConverter: FC<Props> = (props) => {
           Exchange rate calculator
         </h1>
         <p className="max-lg:text-sm max-sm:text-center">
-          Effortlessly convert any supported currency into ZiG (Zimbabwe Gold), providing
-          you with instant access to the value of ZiG against global supported currencies.
+          Effortlessly convert any supported currency into ZiG (Zimbabwe Gold),
+          providing you with instant access to the value of ZiG against global
+          supported currencies.
         </p>
       </div>
 
@@ -48,7 +49,7 @@ const CurrencyConverter: FC<Props> = (props) => {
         <span className="w-full focus-within:border-accent border rounded-lg py-3 px-2 flex ">
           <span className="bg-border p-2 rounded-lg text-sm mr-3">ZiG</span>
           <input
-            min={'0'}
+            min={"0"}
             type="number"
             id="currency"
             value={primaryAmout}
@@ -56,10 +57,10 @@ const CurrencyConverter: FC<Props> = (props) => {
             onChange={(event) => {
               setPriamaryAmount(parseFloat(event.target.value).toString());
               setSecondaryAmount(
-                convert('primary', event.target.value, {
+                convert("primary", event.target.value, {
                   primary: props.rate,
                   secondary: secondaryCurrency,
-                })
+                }),
               );
             }}
           />
@@ -75,10 +76,10 @@ const CurrencyConverter: FC<Props> = (props) => {
             setAmount: (event) => {
               setSecondaryAmount(event.target.value);
               setPriamaryAmount(
-                convert('secondary', event.target.value, {
+                convert("secondary", event.target.value, {
                   primary: props.rate,
                   secondary: secondaryCurrency,
-                })
+                }),
               );
             },
           }}

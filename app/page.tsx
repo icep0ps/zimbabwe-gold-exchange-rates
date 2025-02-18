@@ -1,21 +1,21 @@
-'use server';
+"use server";
 
-import Rates from '@/components/rates';
-import Faq from '@/components/faq/faq';
-import Hero from '@/components/hero/hero';
-import Footer from '@/components/footer/footer';
-import { RatesTable } from '@/components/ratesTable/table';
-import { Currencies } from 'currencies-map';
-import CurrencyConverter from '@/components/converter/converter';
-import Database from '@/services/database/database';
-import { currency } from '@/types';
+import Rates from "@/components/rates";
+import Faq from "@/components/faq/faq";
+import Hero from "@/components/hero/hero";
+import Footer from "@/components/footer/footer";
+import { RatesTable } from "@/components/ratesTable/table";
+import { Currencies } from "currencies-map";
+import CurrencyConverter from "@/components/converter/converter";
+import Database from "@/services/database/database.mjs";
+import { currency } from "@/types";
 
 const getOfficalRate = async () => {
-  const rates = await Database.get.offical('USD').catch((error) => {
+  const rates = await Database.get.offical("USD").catch((error) => {
     throw new Error(error.message);
   });
 
-  if (rates[0] === undefined) throw new Error('Could not find offical rate');
+  if (rates[0] === undefined) throw new Error("Could not find offical rate");
 
   return rates[0] as currency;
 };

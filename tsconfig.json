@@ -29,7 +29,7 @@
     ".next/types/**/*.ts",
     "jobs/extractor/extractor.js",
     "tests/utils/extractor.test.js",
-    "services/providers/locals.js",
+    "services/providers/locals.mjs",
     "utils/convert.js"
   ],
   "exclude": ["node_modules"]
