@@ -1,47 +1,87 @@
-# [Zimbabwe bank rates](https://zimbabwe-bank-rates.vercel.app/)
+# Welcome to React Router!
 
-## Description
+A modern, production-ready template for building full-stack React applications using React Router.
 
-An open source platform to stay updated with up-to-date ZiG bank rates and explore seamless currency conversions.
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
 
-[![Zimbabwe bank rates](./public/images/screenshot.png)](https://zimbabwe-bank-rates.vercel.app/)
+## Features
 
-## Tech Stack
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
 
-- [Next.js](https://nextjs.org)
-- [PostgreSQL](https://www.postgresql.org/)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Shadcn](https://ui.shadcn.com/)
+## Getting Started
 
-### Running Locally
+### Installation
 
-### Dependencies
-
-- PostgreSQL
-- Docker (required soon)
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/icep0ps/zimbabwe-bank-rates.git
-```
-
-### 2. Install dependencies
+Install the dependencies:
 
 ```bash
 npm install
 ```
 
-### 3. Create a `.env.local` & `.env.production` file
+### Development
 
-Create a `.env.local` & `.env.production` file in the root directory and add the environment variables as shown in the `.env.local.example` & `.env.production.example` file.
-
-### 4. Run the application
+Start the development server with HMR:
 
 ```bash
 npm run dev
 ```
 
-## Contributing
+Your application will be available at `http://localhost:5173`.
 
-Contributions are welcome! Please open an issue if you have any questions or suggestions. Your contributions will be acknowledged. See the [contributing guide](./CONTRIBUTING.md) for more information.
+## Building for Production
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+### Docker Deployment
+
+To build and run using Docker:
+
+```bash
+docker build -t my-app .
+
+# Run the container
+docker run -p 3000:3000 my-app
+```
+
+The containerized application can be deployed to any platform that supports Docker, including:
+
+- AWS ECS
+- Google Cloud Run
+- Azure Container Apps
+- Digital Ocean App Platform
+- Fly.io
+- Railway
+
+### DIY Deployment
+
+If you're familiar with deploying Node applications, the built-in app server is production-ready.
+
+Make sure to deploy the output of `npm run build`
+
+```
+├── package.json
+├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
+├── build/
+│   ├── client/    # Static assets
+│   └── server/    # Server-side code
+```
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+
+---
+
+Built with ❤️ using React Router.
