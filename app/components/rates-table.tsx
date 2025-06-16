@@ -99,7 +99,7 @@ export default function RatesDataTable({ data }: Props) {
             <TableBody>
               {sortedData.map((currency, index) => (
                 <TableRow
-                  key={`${currency.currency}-${currency.created_at}`}
+                  key={`${currency.currency}-${currency.created_at}-desktop-${index}`}
                   className={cn(
                     index % 2 === 0 ? "bg-background" : "bg-muted/25"
                   )}
@@ -186,9 +186,9 @@ export default function RatesDataTable({ data }: Props) {
       {/* Mobile Card View */}
       <div className="md:hidden">
         <div className="grid grid-cols-1 gap-4">
-          {sortedData.map((currency) => (
+          {sortedData.map((currency, index) => (
             <Card
-              key={`${currency.currency}-${currency.created_at}`}
+              key={`${currency.currency}-${currency.created_at}-mobile-${index}`}
               className="shadow-sm"
             >
               <CardHeader className="pb-3">

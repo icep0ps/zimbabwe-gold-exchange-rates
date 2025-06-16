@@ -1,15 +1,13 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardFooter } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart";
-import { InfoIcon } from "lucide-react";
-import { Badge } from "./ui/badge";
 import { useMemo } from "react"; // Ensure useMemo is imported
 
 interface ChartAreaLinearProps {

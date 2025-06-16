@@ -9,10 +9,10 @@ import type { Currency } from "~/lib/types";
 import type { Route } from "./+types/home";
 import { mockAllAvailableCurrencies, mockPrimaryBaseCurrency } from "./data";
 
-const API_BASE_URL = "http://localhost:3000/api/v1/rates";
+const API_BASE_URL = "http://192.168.10.139:3000/api/v1/rates";
 const USD_RATE_ENDPOINT = `${API_BASE_URL}/current`;
 const ALL_RATES_ENDPOINT = `${API_BASE_URL}/current`;
-const LATEST_USD_RATES_ENDPOINT = `${API_BASE_URL}/latest/`;
+const HISTORICAL_RATES_ENDPOINT = `${API_BASE_URL}/historical/`;
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -24,15 +24,30 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   try {
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+    const targetCurrency = url.searchParams.get("targetCurrency") ?? "USD";
+
+    let historicalRatesUrl = HISTORICAL_RATES_ENDPOINT + targetCurrency;
+
+    if (startDate && endDate) {
+      historicalRatesUrl += `?startDate=${startDate}&endDate=${endDate}`;
+    } else if (startDate) {
+      historicalRatesUrl += `?startDate=${startDate}`;
+    } else if (endDate) {
+      historicalRatesUrl += `?endDate=${endDate}`;
+    }
+
     const [usdRateResponse, currentRatesResponse, chartRatesResponse] =
       await Promise.all([
         getItems<unknown, Currency[]>(
-          USD_RATE_ENDPOINT + "?targetCurrency=USD"
+          USD_RATE_ENDPOINT + `?targetCurrency=${targetCurrency}`
         ),
         getItems<unknown, Currency[]>(ALL_RATES_ENDPOINT),
-        getItems<unknown, Currency[]>(LATEST_USD_RATES_ENDPOINT + "USD"),
+        getItems<unknown, Currency[]>(historicalRatesUrl),
       ]);
 
     if (
@@ -88,7 +103,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
 
   if (!officialRate) {
     return (
-      <main className="mx-auto max-w-[1080px] w-2/3 space-y-10">
+      <main className="w-full px-4 sm:px-6 md:px-8 lg:max-w-[1080px] lg:mx-auto space-y-10">
         <NavigationBar />
         <div className="flex flex-col items-center justify-center h-96">
           <h2 className="text-xl font-semibold text-red-600">
@@ -101,14 +116,19 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <main className="sm:w-full mx-auto max-w-[1080px] md:w-2/3 space-y-10">
+    <main className="w-full px-4 sm:px-6 md:px-8 lg:max-w-[1080px] lg:mx-auto space-y-10">
       <NavigationBar />
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <ExchangeRateOverviewCard
-          officialRate={officialRate}
-          chartRates={chartRates}
-        />
-        <CurrencyTrendSelector allCurrencies={mockAllAvailableCurrencies} />
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="col-span-1 md:col-span-2">
+          <ExchangeRateOverviewCard
+            officialRate={officialRate}
+            chartRates={chartRates}
+            allAvailableCurrencies={mockAllAvailableCurrencies} // Pass allAvailableCurrencies
+          />
+        </div>
+        <div className="hidden md:block col-span-1">
+          <CurrencyTrendSelector allCurrencies={mockAllAvailableCurrencies} />
+        </div>
       </section>
       <CurrencyConverter
         primaryBaseCurrency={mockPrimaryBaseCurrency}

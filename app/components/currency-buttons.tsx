@@ -8,10 +8,13 @@ interface CurrencyButtonsProps {
 }
 
 export default function CurrencyButtons({ currencies }: CurrencyButtonsProps) {
-  const [selectedCurrency, setSelectedCurrency] = useQueryState("currency", {
-    defaultValue: "USD",
-    shallow: false,
-  });
+  const [selectedCurrency, setSelectedCurrency] = useQueryState(
+    "targetCurrency",
+    {
+      defaultValue: "USD",
+      shallow: false,
+    }
+  );
 
   const handleCurrencySelect = (currency: Currency) => {
     setSelectedCurrency(currency.currency);

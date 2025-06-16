@@ -13,6 +13,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import ChartAreaLinear from "./chart";
 import type { Currency } from "~/lib/types";
 import { currencies } from "country-data";
+import { useQueryState } from "nuqs";
+import {
+  subDays,
+  subMonths,
+  format,
+  differenceInDays,
+  differenceInCalendarMonths,
+} from "date-fns";
+import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+// Helper function to format a Date object to INSEE-MM-DD string
+function formatIsoDate(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -25,22 +48,45 @@ function formatDate(dateString: string) {
 interface ExchangeRateOverviewCardProps {
   officialRate: Currency;
   chartRates: Currency[];
+  allAvailableCurrencies: Currency[];
 }
+
+const TOP_CURRENCIES_FILTER = ["USD", "EUR", "GBP", "ZAR", "CAD"];
 
 export default function ExchangeRateOverviewCard({
   officialRate,
   chartRates,
+  allAvailableCurrencies,
 }: ExchangeRateOverviewCardProps) {
+  const [startDateParam, setStartDate] = useQueryState("startDate", {
+    shallow: false,
+  });
+  const [endDateParam, setEndDate] = useQueryState("endDate");
+  const [targetCurrencyParam, setTargetCurrency] = useQueryState(
+    "targetCurrency",
+    {
+      defaultValue: officialRate.currency,
+      shallow: false,
+    }
+  );
+
   const currentRateVal = Number.parseFloat(officialRate.mid_rate_zwg);
   const previousRateVal = Number.parseFloat(
     officialRate.previous_rate?.mid_rate_zwg ?? "0"
   );
   const rateChange = currentRateVal - previousRateVal;
-  const ratePercentageChange = (rateChange / previousRateVal) * 100;
+
+  let ratePercentageChange;
+  if (previousRateVal === 0) {
+    ratePercentageChange = null;
+  } else {
+    ratePercentageChange = (rateChange / previousRateVal) * 100;
+  }
 
   const currentRate = currentRateVal;
   const change = rateChange.toFixed(5);
-  const percentageChange = ratePercentageChange.toFixed(2);
+  const percentageChange =
+    ratePercentageChange === null ? "N/A" : ratePercentageChange.toFixed(2);
   const changeSign = rateChange >= 0 ? "+" : "";
   const isPositiveChange = rateChange >= 0;
 
@@ -58,6 +104,73 @@ export default function ExchangeRateOverviewCard({
   const isToday = officialRate.created_at === currentZimbabweDate;
 
   const currentDate = formatDate(officialRate.created_at);
+
+  const topCurrenciesForSelect = useMemo(() => {
+    return allAvailableCurrencies.filter((c) =>
+      TOP_CURRENCIES_FILTER.includes(c.currency)
+    );
+  }, [allAvailableCurrencies]);
+
+  const handleCurrencyChange = (currency: string) => {
+    setTargetCurrency(currency);
+  };
+
+  const handleTabChange = (value: string) => {
+    const today = new Date();
+    let calculatedStartDate: Date;
+
+    switch (value) {
+      case "7d":
+        calculatedStartDate = subDays(today, 7);
+        break;
+      case "14d":
+        calculatedStartDate = subDays(today, 14);
+        break;
+      case "1m":
+        calculatedStartDate = subMonths(today, 1);
+        break;
+      default:
+        calculatedStartDate = subDays(today, 7);
+        break;
+    }
+    const calculatedEndDate = new Date();
+
+    setStartDate(formatIsoDate(calculatedStartDate));
+    setEndDate(formatIsoDate(calculatedEndDate));
+  };
+
+  const defaultTabValue = useMemo(() => {
+    const today = new Date();
+    const normalizedToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    if (startDateParam && endDateParam) {
+      const parsedStartDate = new Date(startDateParam);
+      const parsedEndDate = new Date(endDateParam);
+
+      if (parsedEndDate.toDateString() === normalizedToday.toDateString()) {
+        const diffDays = differenceInDays(parsedEndDate, parsedStartDate);
+        const diffMonths = differenceInCalendarMonths(
+          parsedEndDate,
+          parsedStartDate
+        );
+
+        if (diffDays === 7) {
+          return "7d";
+        }
+        if (diffDays === 14) {
+          return "14d";
+        }
+        if (diffMonths === 1 && diffDays >= 28 && diffDays <= 31) {
+          return "1m";
+        }
+      }
+    }
+    return "7d";
+  }, [startDateParam, endDateParam]);
 
   return (
     <Card className="bg-transparent border-none shadow-none col-span-1 lg:col-span-2">
@@ -84,9 +197,9 @@ export default function ExchangeRateOverviewCard({
               isPositiveChange ? "text-green-600" : "text-red-600"
             )}
           >
-            {changeSign}
-            {change} ({changeSign}
-            {percentageChange}%)
+            {previousRateVal !== 0 && `${changeSign}${change} `}
+            {percentageChange !== "N/A" &&
+              `(${changeSign}${percentageChange}%)`}
           </h2>
         </section>
         <CardDescription className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -122,38 +235,78 @@ export default function ExchangeRateOverviewCard({
             </span>
             {isToday ? "Updated" : "Outdated"}
           </Badge>
+          <div className="md:hidden w-full mt-2">
+            <Select
+              value={targetCurrencyParam || officialRate.currency}
+              onValueChange={handleCurrencyChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Currencies</SelectLabel>
+                  {topCurrenciesForSelect.map((currency, index) => (
+                    <SelectItem
+                      key={`${currency.currency}-dropdown`}
+                      value={currency.currency}
+                    >
+                      {currency.currency} -{" "}
+                      {currencies[currency.currency]?.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </CardDescription>
       </CardHeader>
       <CardContent className="px-0">
-        <Tabs defaultValue="1d">
-          <TabsList className="mb-3 h-8">
-            <TabsTrigger value="1d" className="text-sm px-3 py-1">
-              1D
+        <Tabs
+          defaultValue={defaultTabValue}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
+          <TabsList>
+            <TabsTrigger value="7d" className="text-sm px-3 py-1">
+              7D
             </TabsTrigger>
-            <TabsTrigger value="5d" className="text-sm px-3 py-1">
-              5D
+            <TabsTrigger value="14d" className="text-sm px-3 py-1">
+              14D
             </TabsTrigger>
             <TabsTrigger value="1m" className="text-sm px-3 py-1">
               1M
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="1d">
-            <ChartAreaLinear
-              data={chartRates}
-              dataKey="mid_rate_zwg"
-              timeKey="created_at"
-            />
-          </TabsContent>
-          <TabsContent value="5d">
-            <ChartAreaLinear
-              data={chartRates}
-              dataKey="mid_rate_zwg"
-              timeKey="created_at"
-            />
-          </TabsContent>
-          <TabsContent value="1m">
-            <ChartAreaLinear data={chartRates} dataKey="rate" timeKey="date" />
-          </TabsContent>
+          {chartRates && chartRates.length > 0 ? (
+            <>
+              <TabsContent value="7d">
+                <ChartAreaLinear
+                  data={chartRates}
+                  dataKey="mid_rate_zwg"
+                  timeKey="created_at"
+                />
+              </TabsContent>
+              <TabsContent value="14d">
+                <ChartAreaLinear
+                  data={chartRates}
+                  dataKey="mid_rate_zwg"
+                  timeKey="created_at"
+                />
+              </TabsContent>
+              <TabsContent value="1m">
+                <ChartAreaLinear
+                  data={chartRates}
+                  dataKey="mid_rate_zwg"
+                  timeKey="created_at"
+                />
+              </TabsContent>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-40 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p>No chart information available for this period.</p>
+            </div>
+          )}
         </Tabs>
       </CardContent>
       <CardFooter className="w-full p-0 border">
