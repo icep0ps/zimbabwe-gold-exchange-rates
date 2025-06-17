@@ -1,15 +1,15 @@
 import React from "react";
 
-import type { Currency } from "~/lib/types";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
+import { currencies } from "country-data";
 
 interface FaqSectionProps {
-  supportedCurrencies: Currency[];
+  supportedCurrencies: { name: string }[];
 }
 
 const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
@@ -32,7 +32,7 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
           </a>{" "}
         </p>
       </div>
-      <Accordion type="single" collapsible className="w-full max-w-2xl mx-auto">
+      <Accordion type="single" collapsible className="w-full  mx-auto">
         <AccordionItem value="data-source">
           <AccordionTrigger className="text-lg font-semibold hover:no-underline">
             Where do we get our data?
@@ -59,8 +59,11 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
             {supportedCurrencies.length > 0 ? (
               <ul className="list-disc columns-1 sm:columns-2 lg:columns-3 space-y-1 pl-5 text-base text-muted-foreground">
                 {supportedCurrencies.map((curr) => (
-                  <li className="break-inside-avoid" key={curr.currency}>
-                    {curr.name} ({curr.currency})
+                  <li
+                    className="break-inside-avoid"
+                    key={curr.name + "questions"}
+                  >
+                    {curr.name} ({currencies[curr.name]?.name ?? "Unknown"})
                   </li>
                 ))}
               </ul>
@@ -78,8 +81,8 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
             How often does the data update?
           </AccordionTrigger>
           <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-            The data is updated daily, typically around **9-10 AM CAT** (Central
-            African Time).
+            The data is updated daily, typically around{" "}
+            <strong>9-10 AM CAT </strong> (Central African Time).
           </AccordionContent>
         </AccordionItem>
       </Accordion>

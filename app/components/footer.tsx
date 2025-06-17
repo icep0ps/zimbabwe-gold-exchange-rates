@@ -11,10 +11,10 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
       <div className="container mx-auto flex flex-col lg:flex-row justify-between items-center lg:items-start gap-8 px-4">
         <div className="flex flex-col gap-4 text-center lg:text-left lg:w-2/5 max-w-lg">
           <h3 className="text-2xl font-semibold text-primary">
-            Zimbabwe Bank Rates
+            Zimbabwe Exchange Rates
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            An open-source platform to stay updated with real-time ZWL bank
+            An open-source platform to stay updated with real-time ZWG bank
             rates and explore seamless currency conversions.
           </p>
           <div className="flex justify-center lg:justify-start gap-3 mt-2 ">
@@ -53,14 +53,14 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
             </a>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            © {currentYear} Zimbabwe Bank Rates. All rights reserved.
+            © {currentYear} Zimbabwe Exchange Rates. All rights reserved.
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-around w-full lg:w-3/5 gap-8 sm:gap-12 ">
           <nav
             aria-label="Main navigation in footer"
-            className="flex flex-col gap-3 text-center sm:text-left w-full sm:w-auto border-l pl-8"
+            className="flex flex-col gap-3 text-center sm:text-left w-full sm:w-auto sm:border-l sm:pl-8"
           >
             <h4 className="font-semibold text-lg mb-1">Home</h4>
             <a
@@ -79,7 +79,7 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
 
           <nav
             aria-label="Support navigation in footer"
-            className="flex flex-col gap-3 text-center sm:text-right w-full sm:w-auto border-l pl-8"
+            className="flex flex-col gap-3 text-center sm:text-right w-full sm:w-auto sm:border-l sm:pl-8"
           >
             <h4 className="font-semibold text-lg mb-1">Support</h4>
             <a

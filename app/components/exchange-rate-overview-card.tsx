@@ -48,7 +48,7 @@ function formatDate(dateString: string) {
 interface ExchangeRateOverviewCardProps {
   officialRate: Currency;
   chartRates: Currency[];
-  allAvailableCurrencies: Currency[];
+  allAvailableCurrencies: { name: string }[];
 }
 
 const TOP_CURRENCIES_FILTER = ["USD", "EUR", "GBP", "ZAR", "CAD"];
@@ -107,7 +107,7 @@ export default function ExchangeRateOverviewCard({
 
   const topCurrenciesForSelect = useMemo(() => {
     return allAvailableCurrencies.filter((c) =>
-      TOP_CURRENCIES_FILTER.includes(c.currency)
+      TOP_CURRENCIES_FILTER.includes(c.name)
     );
   }, [allAvailableCurrencies]);
 
@@ -248,11 +248,10 @@ export default function ExchangeRateOverviewCard({
                   <SelectLabel>Currencies</SelectLabel>
                   {topCurrenciesForSelect.map((currency, index) => (
                     <SelectItem
-                      key={`${currency.currency}-dropdown`}
-                      value={currency.currency}
+                      key={`${currency.name}-dropdown`}
+                      value={currency.name}
                     >
-                      {currency.currency} -{" "}
-                      {currencies[currency.currency]?.name}
+                      {currency.name} - {currencies[currency.name]?.name}
                     </SelectItem>
                   ))}
                 </SelectGroup>

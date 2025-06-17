@@ -3,7 +3,7 @@ import CurrencyButtons from "./currency-buttons";
 import type { Currency } from "~/lib/types";
 
 interface CurrencyTrendSelectorProps {
-  allCurrencies: Currency[];
+  allCurrencies: { name: string }[];
 }
 
 const TOP_CURRENCIES_FILTER = ["USD", "EUR", "GBP", "ZAR", "CAD"];
@@ -12,7 +12,7 @@ export default function CurrencyTrendSelector({
   allCurrencies,
 }: CurrencyTrendSelectorProps) {
   const top5Currencies = allCurrencies.filter((c) =>
-    TOP_CURRENCIES_FILTER.includes(c.currency)
+    TOP_CURRENCIES_FILTER.includes(c.name)
   );
 
   return (
