@@ -1,10 +1,9 @@
 import { useQueryState } from "nuqs";
-import type { Currency } from "~/lib/types";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 
 interface CurrencyButtonsProps {
-  currencies: Currency[];
+  currencies: { name: string }[];
 }
 
 export default function CurrencyButtons({ currencies }: CurrencyButtonsProps) {
@@ -16,27 +15,25 @@ export default function CurrencyButtons({ currencies }: CurrencyButtonsProps) {
     }
   );
 
-  const handleCurrencySelect = (currency: Currency) => {
-    setSelectedCurrency(currency.currency);
+  const handleCurrencySelect = (currency: { name: string }) => {
+    setSelectedCurrency(currency.name);
   };
 
   return (
     <>
       {currencies.map((curr) => (
         <Button
-          key={curr.currency}
+          key={curr.name}
           onClick={() => handleCurrencySelect(curr)}
           className={cn(
             "flex items-center gap-2 p-3 w-full max-w-[150px] lg:max-w-none text-left",
-            selectedCurrency === curr.currency
+            selectedCurrency === curr.name
               ? "bg-primary text-primary-foreground border border-primary-dark"
               : "bg-card text-secondary-foreground hover:bg-secondary/80 border"
           )}
         >
-          {curr.currency}
-          <span className="hidden sm:inline-block text-sm">
-            ({curr.currency})
-          </span>
+          {curr.name}
+          <span className="hidden sm:inline-block text-sm">({curr.name})</span>
         </Button>
       ))}
     </>

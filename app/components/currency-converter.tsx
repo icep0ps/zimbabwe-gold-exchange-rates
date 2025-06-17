@@ -7,7 +7,7 @@ import { calculateExchange } from "~/lib/utils";
 
 interface CurrencyConverterProps {
   primaryBaseCurrency: Currency;
-  allAvailableCurrencies: (Currency & { name: string })[];
+  allAvailableCurrencies: Currency[];
 }
 
 const CurrencyConverter: FC<CurrencyConverterProps> = ({
@@ -21,10 +21,9 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
         allAvailableCurrencies[0]
       );
     });
-
   const [primaryAmount, setPrimaryAmount] = useState<string>(() => {
-    return primaryBaseCurrency.mid_zwl
-      ? primaryBaseCurrency.mid_zwl.toFixed(2)
+    return primaryBaseCurrency.mid_rate_zwg
+      ? parseFloat(primaryBaseCurrency.mid_rate_zwg).toFixed(2)
       : "1.00";
   });
 
@@ -42,11 +41,17 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
         secondary: secondarySelectedCurrency,
       })
     );
-  }, [primaryAmount, secondarySelectedCurrency, primaryBaseCurrency]);
+  }, [secondarySelectedCurrency]);
 
   const handlePrimaryAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setPrimaryAmount(value);
+    setSecondaryAmount(
+      calculateExchange("primary", value, {
+        primary: primaryBaseCurrency,
+        secondary: secondarySelectedCurrency,
+      })
+    );
   };
 
   const handleSecondaryAmountChange = (
@@ -69,8 +74,8 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
           Exchange Rate Calculator
         </h1>
         <p className="text-sm text-muted-foreground">
-          Effortlessly convert any supported currency into ZiG (Zimbabwe Gold),
-          providing you with instant access to the value of ZiG against global
+          Effortlessly convert any supported currency into ZWG (Zimbabwe Gold),
+          providing you with instant access to the value of ZWG against global
           supported currencies.
         </p>
       </div>

@@ -8,11 +8,13 @@ import { getItems } from "~/lib/fetcher";
 import type { Currency } from "~/lib/types";
 import type { Route } from "./+types/home";
 import { mockAllAvailableCurrencies, mockPrimaryBaseCurrency } from "./data";
+import FrequentlyAskedQuestions from "~/components/faq-section";
 
-const API_BASE_URL = "http://192.168.10.139:3000/api/v1/rates";
-const USD_RATE_ENDPOINT = `${API_BASE_URL}/current`;
-const ALL_RATES_ENDPOINT = `${API_BASE_URL}/current`;
-const HISTORICAL_RATES_ENDPOINT = `${API_BASE_URL}/historical/`;
+const API_BASE_URL = "http://192.168.10.139:3000/api/v1/";
+const USD_RATE_ENDPOINT = `${API_BASE_URL}rates/current`;
+const ALL_RATES_ENDPOINT = `${API_BASE_URL}rates/current`;
+const HISTORICAL_RATES_ENDPOINT = `${API_BASE_URL}rates/historical/`;
+const ALL_CURRENCIES_NAMES = `${API_BASE_URL}currencies`;
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -41,19 +43,25 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       historicalRatesUrl += `?endDate=${endDate}`;
     }
 
-    const [usdRateResponse, currentRatesResponse, chartRatesResponse] =
-      await Promise.all([
-        getItems<unknown, Currency[]>(
-          USD_RATE_ENDPOINT + `?targetCurrency=${targetCurrency}`
-        ),
-        getItems<unknown, Currency[]>(ALL_RATES_ENDPOINT),
-        getItems<unknown, Currency[]>(historicalRatesUrl),
-      ]);
+    const [
+      usdRateResponse,
+      currentRatesResponse,
+      chartRatesResponse,
+      allCurrenciesResponse,
+    ] = await Promise.all([
+      getItems<unknown, Currency[]>(
+        USD_RATE_ENDPOINT + `?targetCurrency=${targetCurrency}`
+      ),
+      getItems<unknown, Currency[]>(ALL_RATES_ENDPOINT),
+      getItems<unknown, Currency[]>(historicalRatesUrl),
+      getItems<unknown, { name: string }[]>(ALL_CURRENCIES_NAMES),
+    ]);
 
     if (
       !usdRateResponse.success ||
       !usdRateResponse.data ||
-      usdRateResponse.data.length === 0
+      usdRateResponse.data.length === 0 ||
+      !allCurrenciesResponse.success
     ) {
       console.error(
         "Loader Error: Failed to fetch USD exchange rate or data is empty."
@@ -61,6 +69,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       return {
         officialRate: null,
         rates: [],
+        currencies: [],
         chartRates: [],
         error: "Failed to load official USD rate. Please try again.",
       };
@@ -80,9 +89,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     return {
-      officialRate: usdRateResponse.data[0],
       rates: currentRatesResponse.data,
       chartRates: chartRatesResponse.data,
+      officialRate: usdRateResponse.data[0],
+      currencies: allCurrenciesResponse.data,
     };
   } catch (error) {
     console.error(
@@ -92,6 +102,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     return {
       officialRate: null,
       rates: [],
+      currencies: [],
       chartRates: [],
       error: "An unexpected error occurred. Please refresh the page.",
     };
@@ -99,7 +110,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function HomePage({ loaderData }: Route.ComponentProps) {
-  const { officialRate, rates, chartRates, error } = loaderData;
+  const { officialRate, rates, chartRates, currencies, error } = loaderData;
 
   if (!officialRate) {
     return (
@@ -123,18 +134,19 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
           <ExchangeRateOverviewCard
             officialRate={officialRate}
             chartRates={chartRates}
-            allAvailableCurrencies={mockAllAvailableCurrencies} // Pass allAvailableCurrencies
+            allAvailableCurrencies={currencies}
           />
         </div>
         <div className="hidden md:block col-span-1">
-          <CurrencyTrendSelector allCurrencies={mockAllAvailableCurrencies} />
+          <CurrencyTrendSelector allCurrencies={currencies} />
         </div>
       </section>
       <CurrencyConverter
-        primaryBaseCurrency={mockPrimaryBaseCurrency}
-        allAvailableCurrencies={mockAllAvailableCurrencies}
+        primaryBaseCurrency={officialRate}
+        allAvailableCurrencies={rates}
       />
       <RatesDataTable data={rates} />
+      <FrequentlyAskedQuestions supportedCurrencies={currencies} />
       <SiteFooter />
     </main>
   );

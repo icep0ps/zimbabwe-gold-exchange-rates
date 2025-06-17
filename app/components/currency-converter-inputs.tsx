@@ -1,13 +1,14 @@
 import React, { type ChangeEvent, useEffect, useState } from "react";
 import type { Currency } from "~/lib/types";
 import { Input } from "./ui/input";
+import { currencies } from "country-data";
 
 interface CurrencyInputSectionProps {
   amount: string;
   onAmountChange: (event: ChangeEvent<HTMLInputElement>) => void;
   selectedCurrency: Currency;
   onCurrencyChange: (newCurrency: Currency) => void;
-  allCurrencies: (Currency & { name: string })[];
+  allCurrencies: Currency[];
   fixedCurrencySymbol?: string;
   inputId?: string;
   inputPlaceholder?: string;
@@ -82,7 +83,7 @@ const CurrencyInputSection: React.FC<CurrencyInputSectionProps> = ({
               className="bg-background text-foreground"
               key={curr.currency}
             >
-              {curr.name} ({curr.currency})
+              {curr.currency} ({currencies[curr.currency]?.name ?? "Unknown"})
             </option>
           ))}
         </select>

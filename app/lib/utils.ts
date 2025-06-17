@@ -22,14 +22,14 @@ export const calculateExchange = (
   let convertedAmount: number;
 
   if (source === "primary") {
-    if (secondary.mid_zwl && secondary.mid_zwl > 0) {
-      convertedAmount = amount / secondary.mid_zwl;
+    if (secondary.mid_rate_zwg && parseFloat(secondary.mid_rate_zwg) > 0) {
+      convertedAmount = amount / parseFloat(secondary.mid_rate_zwg);
     } else {
       convertedAmount = 0;
     }
   } else {
-    if (secondary.mid_zwl) {
-      convertedAmount = amount * secondary.mid_zwl;
+    if (secondary.mid_rate_zwg) {
+      convertedAmount = amount * parseFloat(secondary.mid_rate_zwg);
     } else {
       convertedAmount = 0;
     }
