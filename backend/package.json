@@ -1,0 +1,32 @@
+{
+  "name": "zimbabwe-bank-rates-backend",
+  "type": "module",
+  "scripts": {
+    "start:entrypoint": "tsx ./entrypoint.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node src/index.js",
+    "get-rates": "npx tsx ./src/rates/script.ts",
+    "db:studio": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit studio",
+    "db:push": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit push"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.4",
+    "@t3-oss/env-core": "^0.13.8",
+    "axios": "^1.9.0",
+    "cheerio": "^1.1.0",
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.7.11",
+    "pdf2json": "^3.1.6",
+    "pg": "^8.16.0",
+    "zod": "^3.25.67",
+    "drizzle-kit": "^0.31.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/pg": "^8.15.4",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3"
+  }
+}

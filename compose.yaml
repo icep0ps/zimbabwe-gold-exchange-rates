@@ -1,0 +1,120 @@
+name: zimbabwe_bank_rates
+
+services:
+  app_dev:
+    container_name: zimbabwe_bank_rates_frontend_dev
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/:/usr/local/app
+      - /usr/local/app/node_modules
+    ports:
+      - 5173:5173
+    env_file:
+      - ./frontend/.env
+    profiles: ["dev"]
+    environment:
+      NODE_ENV: development
+    depends_on:
+      api_dev:
+        condition: service_healthy
+
+  api_dev:
+    container_name: zimbabwe_bank_rates_backend_dev
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend/:/usr/local/app
+      - /usr/local/app/node_modules
+    ports:
+      - 3001:3001
+    profiles: ["dev"]
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: development
+    depends_on:
+      database_dev:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "-s", "http://localhost:3000/api/v1/currencies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  database_dev:
+    container_name: zimbabwe_bank_rates_db_dev
+    image: postgres:latest
+    volumes:
+      - zbr-postgres-data-dev:/var/lib/postgresql/data
+    env_file:
+      - ./backend/.env
+    profiles: ["dev"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zimbabwe_bank_rates"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app_prod:
+    container_name: zimbabwe_bank_rates_frontend_prod
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile.prod
+    ports:
+      - 3000:3000
+    env_file:
+      - ./frontend/.env.production
+    profiles: ["prod"]
+    environment:
+      NODE_ENV: production
+    depends_on:
+      api_prod:
+        condition: service_healthy
+
+  api_prod:
+    container_name: zimbabwe_bank_rates_backend_prod
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile.prod
+    ports:
+      - 3001:3001
+    profiles: ["prod"]
+    env_file:
+      - ./backend/.env.production
+    environment:
+      NODE_ENV: production
+    depends_on:
+      database_prod:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  database_prod:
+    container_name: zimbabwe_bank_rates_db_prod
+    image: postgres:latest
+    volumes:
+      - zbr-postgres-data-prod:/var/lib/postgresql/data
+    env_file:
+      - ./backend/.env.production
+    profiles: ["prod"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zimbabwe_bank_rates"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  zbr-postgres-data-dev:
+  zbr-postgres-data-prod:

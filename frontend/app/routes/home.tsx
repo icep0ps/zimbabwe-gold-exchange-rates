@@ -7,14 +7,14 @@ import RatesDataTable from "~/components/rates-table";
 import { getItems } from "~/lib/fetcher";
 import type { Currency } from "~/lib/types";
 import type { Route } from "./+types/home";
-import { mockAllAvailableCurrencies, mockPrimaryBaseCurrency } from "./data";
 import FrequentlyAskedQuestions from "~/components/faq-section";
 
-const API_BASE_URL = "http://192.168.10.139:3000/api/v1/";
-const USD_RATE_ENDPOINT = `${API_BASE_URL}rates/current`;
-const ALL_RATES_ENDPOINT = `${API_BASE_URL}rates/current`;
-const HISTORICAL_RATES_ENDPOINT = `${API_BASE_URL}rates/historical/`;
-const ALL_CURRENCIES_NAMES = `${API_BASE_URL}currencies`;
+const USD_RATE_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
+const ALL_RATES_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
+const HISTORICAL_RATES_ENDPOINT = `${
+  import.meta.env.VITE_API_BASE_URL
+}rates/historical/`;
+const ALL_CURRENCIES_NAMES = `${import.meta.env.VITE_API_BASE_URL}currencies`;
 
 export function meta({}: Route.MetaArgs) {
   return [

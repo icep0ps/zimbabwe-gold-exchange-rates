@@ -1,0 +1,16 @@
+FROM node:24-alpine3.21 AS builder
+WORKDIR /app
+
+RUN apk add --no-cache curl
+
+COPY ./package.json ./package-lock.json .
+RUN npm install
+COPY ./ .
+
+EXPOSE 3000 
+RUN chmod +x ./seed-database.sh
+
+CMD ["sh", "-c", "./seed-database.sh "]
+
+
+
