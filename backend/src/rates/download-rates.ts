@@ -48,33 +48,43 @@ export async function getMonthPageURL(
     `Searching for ${targetMonth}/${targetYear} page URL from: ${FULL_EXCHANGE_RATES_URL}`,
   );
   try {
-    const response: AxiosResponse<string> = await axios.get(
-      FULL_EXCHANGE_RATES_URL,
-      {
-        httpsAgent: agent,
-      },
-    );
-    const $: cheerio.CheerioAPI = cheerio.load(response.data);
+    let $: cheerio.CheerioAPI;
+    if (
+      process.env.NODE_ENV === "production" ||
+      process.env.NODE_ENV === "development"
+    ) {
+      const response: AxiosResponse<string> = await axios.post(
+        FULL_EXCHANGE_RATES_URL,
+        "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
+        {
+          httpsAgent: agent,
+        },
+      );
+
+      $ = cheerio.load(response.data);
+    } else {
+      const buffer = fs.readFileSync(
+        `${process.cwd()}/__tests__/rates/pages/exchange-rates.html`,
+      );
+      $ = cheerio.loadBuffer(buffer);
+    }
 
     // Select all links within h2 tags inside div.row0, which are typically monthly links
-    const monthLinks = $("div.row0 > div.page-header > h2 > a");
+    const monthLinks = $("div.page-header h2");
 
     let foundMonthUrl: string | undefined;
 
     monthLinks.each((_, element) => {
-      const linkText = $(element).text().trim(); // e.g., "June 2025"
-      const partialUrl = $(element).attr("href");
+      const linkText = $(element).clone().children().filter("a").attr("href"); // e.g., "June 2025"
 
-      if (partialUrl) {
+      if (linkText) {
         // Simple regex to extract month name and year from the link text
-        const match = linkText.match(/([a-zA-Z]+)\s+(\d{4})/);
-        if (match && match.length >= 3) {
-          const monthName = match[1].toLowerCase();
-          const year = parseInt(match[2], 10);
+        const match = linkText?.match(/([a-z]+)-([0-9]+)/g)?.pop();
+        if (match) {
+          const [monthName, year] = match.split("-");
           const monthNumber = monthNames[monthName];
-
-          if (monthNumber === targetMonth && year === targetYear) {
-            foundMonthUrl = `${RBZ_BASE_URL}${partialUrl}`;
+          if (monthNumber === targetMonth && parseInt(year) === targetYear) {
+            foundMonthUrl = `${RBZ_BASE_URL}${linkText}`;
             return false; // Break out of .each loop
           }
         }
@@ -114,11 +124,24 @@ export async function getDailyRatePdfDownloadURL(
   targetDay: number,
 ): Promise<string> {
   console.log(`Navigating to monthly rates page: ${monthPageUrl}`);
+
   try {
-    const response: AxiosResponse<string> = await axios.get(monthPageUrl, {
-      httpsAgent: agent,
-    });
-    const $: cheerio.CheerioAPI = cheerio.load(response.data);
+    let $: cheerio.CheerioAPI;
+    if (
+      process.env.ENV === "production" ||
+      process.env.NODE_ENV === "development"
+    ) {
+      const response: AxiosResponse<string> = await axios.get(monthPageUrl, {
+        httpsAgent: agent,
+      });
+
+      $ = cheerio.load(response.data);
+    } else {
+      const buffer = fs.readFileSync(
+        `${process.cwd()}/__tests__/rates/pages/daily-exchange-rates.html`,
+      );
+      $ = cheerio.loadBuffer(buffer);
+    }
 
     let foundPdfUrl: string | undefined;
 

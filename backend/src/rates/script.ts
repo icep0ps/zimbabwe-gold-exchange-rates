@@ -1,31 +1,30 @@
-import path from "path";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 import "dotenv/config";
-import { currencies } from "../db/schema.js";
+import { drizzle } from "drizzle-orm/node-postgres";
+import path from "path";
+import { Pool } from "pg";
+import { rates } from "../db/schema.js";
 import { seedRatesToDatabase } from "../db/seeder.js";
-import { downloadRatesForDate } from "./downloadRates.js";
-import { type ExtractedRates, readRatesPdf } from "./extractRates.js";
-import { env } from "../../env.js";
+import { downloadRatesForDate } from "./download-rates.js";
+import { type ExtractedRates, readRatesPdf } from "./extract-rates.js";
 
-const PROJECT_ROOT_DIR: string = process.cwd();
+export const PROJECT_ROOT_DIR: string = process.cwd();
 const PDF_SAVE_DIR: string = path.join(PROJECT_ROOT_DIR, "src", "rates");
 const PDF_FILE_NAME: string = "rates.pdf";
 const FULL_PDF_PATH: string = path.join(PDF_SAVE_DIR, PDF_FILE_NAME);
 
 const pool = new Pool({
   ssl: false,
-  host: env.POSTGRES_HOST,
-  port: parseInt(env.POSTGRES_PORT),
-  user: env.POSTGRES_USER,
-  password: env.POSTGRES_PASSWORD,
-  database: env.POSTGRES_DB,
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT as string),
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-const db = drizzle(pool, { schema: { currencies } });
+const db = drizzle(pool, { schema: { rates } });
 
 /**
  * Orchestrates the entire process of downloading the exchange rates PDF for a specific date
@@ -86,11 +85,13 @@ async function runRateExtractionProcess(
     } else {
       console.error("An unexpected error occurred.");
     }
-    throw error; // Re-throw the error for Promise.allSettled to capture
+    throw error;
   }
-} // Example usage:
+}
+
+// Example usage:
 // To run for today's date (default):
 //runRateExtractionProcess();
 
-// To run for a specific date, e.g., June 15, 2025:
-runRateExtractionProcess();
+// To run for a specific date, e.g., new Date(2025, 2, 2) = Sun Mar 02 2025:
+runRateExtractionProcess(new Date(2025, 2, 2));
