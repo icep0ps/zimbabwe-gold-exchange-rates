@@ -6,11 +6,11 @@ import { rates } from "../db/schema.js";
 import { seedRatesToDatabase } from "../db/seeder.js";
 import { downloadRatesForDate } from "./download-rates.js";
 import { type ExtractedRates, readRatesPdf } from "./extract-rates.js";
+import { getDaysBetweenDates } from "../utils.js";
+import { error } from "console";
 
 export const PROJECT_ROOT_DIR: string = process.cwd();
 const PDF_SAVE_DIR: string = path.join(PROJECT_ROOT_DIR, "src", "rates");
-const PDF_FILE_NAME: string = "rates.pdf";
-const FULL_PDF_PATH: string = path.join(PDF_SAVE_DIR, PDF_FILE_NAME);
 
 const pool = new Pool({
   ssl: false,
@@ -26,17 +26,27 @@ const pool = new Pool({
 
 const db = drizzle(pool, { schema: { rates } });
 
+const SCRIPT_DATE =
+  process.env.NODE_ENV === "development" ||
+  process.env.NODE_ENV === "production"
+    ? new Date()
+    : new Date(2024, 11, 15);
+
 /**
  * Orchestrates the entire process of downloading the exchange rates PDF for a specific date
  * and then extracting and seeding the rates into the database.
  * This function now uses the shared database pool.
  * @param {Date} [targetDate=new Date()] - The specific date for which to download the rates. Defaults to today.
  * @returns {Promise<ExtractedRates | void>} A promise that resolves with the extracted rates
- * or voids if an error occurs.
+ * or voids if an error occurs. To run for a specific date, e.g., new Date(2025, 2, 2) = Sun Mar 02 2025
  */
-async function runRateExtractionProcess(
-  targetDate: Date = new Date(),
-): Promise<ExtractedRates | void> {
+
+export const runRateExtractionProcess = async (
+  targetDate: Date = SCRIPT_DATE,
+): Promise<ExtractedRates | void> => {
+  const PDF_FILE_NAME: string = `${targetDate.toLocaleDateString()}.pdf`;
+  const FULL_PDF_PATH: string = path.join(PDF_SAVE_DIR, PDF_FILE_NAME);
+
   console.log(
     `Starting the extraction process for: ${targetDate.toDateString()}`,
   );
@@ -46,6 +56,7 @@ async function runRateExtractionProcess(
     console.log(
       `\n[${targetDate.toDateString()}] Attempting to download exchange rates PDF...`,
     );
+
     await downloadRatesForDate(targetDate, PROJECT_ROOT_DIR, PDF_FILE_NAME);
     console.log(`[${targetDate.toDateString()}] PDF download complete.`);
 
@@ -87,11 +98,35 @@ async function runRateExtractionProcess(
     }
     throw error;
   }
-}
+};
 
-// Example usage:
-// To run for today's date (default):
-//runRateExtractionProcess();
+// Using dependency injection because I want to tetst this function.
+export const runBatchRateExtractionProcess = async (
+  startDate: Date,
+  endDate: Date = new Date(),
+  cb: typeof runRateExtractionProcess = runRateExtractionProcess,
+) => {
+  const dates: Date[] = [];
+  const NUBER_OF_DAYS_TO_ADD = getDaysBetweenDates(startDate, endDate);
+  for (let i = 0; i <= NUBER_OF_DAYS_TO_ADD; i++) {
+    const startDateCopy = new Date(startDate);
+    startDateCopy.setDate(startDate.getDate() + i);
+    dates.push(startDateCopy);
+  }
+  const starterPromise = Promise.resolve<void | ExtractedRates | null>(null);
+  await dates.reduce(
+    (p, c) =>
+      p
+        .then((res) => {
+          console.log(res);
+          return cb(c);
+        })
+        .catch(() => console.log(error)),
+    starterPromise,
+  );
+};
 
-// To run for a specific date, e.g., new Date(2025, 2, 2) = Sun Mar 02 2025:
-runRateExtractionProcess(new Date(2025, 2, 2));
+const startDate = new Date(2024, 11, 5);
+const endDate = new Date(2024, 11, 10);
+
+runBatchRateExtractionProcess(startDate, endDate);

@@ -11,3 +11,8 @@ export const getPreviousDateString = (currentDateString: string): string => {
   currentDate.setDate(currentDate.getDate() - 1);
   return formatDate(currentDate);
 };
+
+export const getDaysBetweenDates = (startDate: Date, endDate: Date) => {
+  const ONE_DAY = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+  return Math.round(Math.abs((endDate - startDate) / ONE_DAY));
+};

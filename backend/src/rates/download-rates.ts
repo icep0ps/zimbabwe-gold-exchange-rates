@@ -69,13 +69,12 @@ export async function getMonthPageURL(
       $ = cheerio.loadBuffer(buffer);
     }
 
-    // Select all links within h2 tags inside div.row0, which are typically monthly links
     const monthLinks = $("div.page-header h2");
 
     let foundMonthUrl: string | undefined;
 
     monthLinks.each((_, element) => {
-      const linkText = $(element).clone().children().filter("a").attr("href"); // e.g., "June 2025"
+      const linkText = $(element).clone().children().filter("a").attr("href");
 
       if (linkText) {
         // Simple regex to extract month name and year from the link text
@@ -145,7 +144,6 @@ export async function getDailyRatePdfDownloadURL(
 
     let foundPdfUrl: string | undefined;
 
-    // Iterate over each table row in the tbody
     $("tbody tr").each((_, rowElement) => {
       const $row = $(rowElement);
       const dayCellText = $row.find("td:nth-child(1)").text().trim(); // Get text from the first <td> (e.g., "02")
@@ -158,7 +156,7 @@ export async function getDailyRatePdfDownloadURL(
           const partialUrl = pdfLinkElement.attr("href");
           if (partialUrl) {
             foundPdfUrl = `${RBZ_BASE_URL}${partialUrl}`;
-            return false; // Break out of .each loop
+            return false;
           }
         }
       }
@@ -186,6 +184,7 @@ export async function getDailyRatePdfDownloadURL(
     );
   }
 }
+
 /**
  * Downloads a file from a given URL to a specified local path.
  * @param {string} fileUrl - The URL of the file to download.
@@ -283,7 +282,3 @@ export async function downloadRatesForDate(
     );
   }
 }
-
-// Example usage:
-// To download rates for June 16, 2025:
-// downloadRatesForDate(new Date('2025-06-16'), __dirname);
