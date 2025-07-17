@@ -1,4 +1,4 @@
-import { expect, test, describe, assert } from "vitest";
+import { expect, test, describe, assert, vi } from "vitest";
 import {
   getDailyRatePdfDownloadURL,
   getMonthPageURL,
