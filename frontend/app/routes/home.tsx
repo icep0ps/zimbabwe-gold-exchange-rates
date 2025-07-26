@@ -1,13 +1,20 @@
+import { format, subDays } from "date-fns";
+import React from "react";
 import CurrencyConverter from "~/components/currency-converter";
 import CurrencyTrendSelector from "~/components/currency-trend-selector";
 import ExchangeRateOverviewCard from "~/components/exchange-rate-overview-card";
-import SiteFooter from "~/components/footer";
-import NavigationBar from "~/components/navigation-bar";
+import FrequentlyAskedQuestions from "~/components/faq-section";
 import RatesDataTable from "~/components/rates-table";
 import { getItems } from "~/lib/fetcher";
-import type { Currency } from "~/lib/types";
+import type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  Currency,
+  Rate,
+  RatesResponse,
+} from "~/lib/types";
 import type { Route } from "./+types/home";
-import FrequentlyAskedQuestions from "~/components/faq-section";
+import { logger } from "~/lib/logger.server";
 
 const USD_RATE_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
 const ALL_RATES_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
@@ -18,30 +25,64 @@ const ALL_CURRENCIES_NAMES = `${import.meta.env.VITE_API_BASE_URL}currencies`;
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Zimbabwe Exchange Rates" },
+    { title: "Zimbabwe Gold Exchange Rates" },
     {
       name: "description",
-      content: "Stay updated with the latest Zimbabwe exchange rates.",
+      content: "Stay updated with the latest Zimbabwe Gold exchange rates.",
     },
   ];
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
+  async ({ request, context }, next) => {
+    const requestId = crypto.randomUUID();
+
+    const start = performance.now();
+    const response = await next();
+    const duration = performance.now() - start;
+
+    const log = {
+      method: request.method,
+      path: request.url,
+      request: {
+        headers: request.headers,
+      },
+      response: {
+        headers: response.headers,
+        status: response.status,
+        body: response.body,
+      },
+      duration,
+    };
+
+    logger.info(
+      `[${requestId}] Response ${response.status} (${duration}ms)`,
+      log
+    );
+    return response;
+  },
+];
+
+export async function loader({
+  request,
+  context,
+}: Route.LoaderArgs): Promise<RatesResponse> {
   try {
     const url = new URL(request.url);
-    const startDate = url.searchParams.get("startDate");
-    const endDate = url.searchParams.get("endDate");
+    const dateFourteenDaysAgo = format(subDays(new Date(), 14), "yyyy-MM-dd");
+
+    const startDate = url.searchParams.get("startDate") ?? dateFourteenDaysAgo;
+    const endDate = url.searchParams.get("endDate") ?? undefined;
     const targetCurrency = url.searchParams.get("targetCurrency") ?? "USD";
 
-    let historicalRatesUrl = HISTORICAL_RATES_ENDPOINT + targetCurrency;
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append("startDate", startDate);
+    if (endDate) queryParams.append("endDate", endDate);
 
-    if (startDate && endDate) {
-      historicalRatesUrl += `?startDate=${startDate}&endDate=${endDate}`;
-    } else if (startDate) {
-      historicalRatesUrl += `?startDate=${startDate}`;
-    } else if (endDate) {
-      historicalRatesUrl += `?endDate=${endDate}`;
-    }
+    const historicalRatesUrl =
+      HISTORICAL_RATES_ENDPOINT +
+      targetCurrency +
+      (queryParams.toString() ? `?${queryParams}` : "");
 
     const [
       usdRateResponse,
@@ -49,86 +90,71 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       chartRatesResponse,
       allCurrenciesResponse,
     ] = await Promise.all([
-      getItems<unknown, Currency[]>(
-        USD_RATE_ENDPOINT + `?targetCurrency=${targetCurrency}`
+      getItems<unknown, Rate[]>(
+        `${USD_RATE_ENDPOINT}?targetCurrency=${targetCurrency}`
       ),
-      getItems<unknown, Currency[]>(ALL_RATES_ENDPOINT),
-      getItems<unknown, Currency[]>(historicalRatesUrl),
-      getItems<unknown, { name: string }[]>(ALL_CURRENCIES_NAMES),
+      getItems<unknown, Rate[]>(ALL_RATES_ENDPOINT),
+      getItems<unknown, Rate[]>(historicalRatesUrl),
+      getItems<unknown, Currency[]>(ALL_CURRENCIES_NAMES),
     ]);
 
-    if (
-      !usdRateResponse.success ||
-      !usdRateResponse.data ||
-      usdRateResponse.data.length === 0 ||
-      !allCurrenciesResponse.success
-    ) {
-      console.error(
-        "Loader Error: Failed to fetch USD exchange rate or data is empty."
-      );
-      return {
-        officialRate: null,
-        rates: [],
-        currencies: [],
-        chartRates: [],
-        error: "Failed to load official USD rate. Please try again.",
-      };
-    }
+    const failedResponses = [
+      { name: "USD rate", response: usdRateResponse },
+      { name: "Current rates", response: currentRatesResponse },
+      { name: "Chart rates", response: chartRatesResponse },
+      { name: "Currency list", response: allCurrenciesResponse },
+    ].filter(({ response }) => !response.success);
 
-    if (!currentRatesResponse.success || !chartRatesResponse.success) {
-      console.warn(
-        "Loader Warning: Some exchange rate data could not be loaded."
+    if (failedResponses.length > 0) {
+      const messages = failedResponses.map(
+        ({ name, response }) =>
+          `${name} fetch failed: ${
+            (response as ApiErrorResponse).message || "Unknown error"
+          }`
       );
+
       return {
-        officialRate: usdRateResponse.data[0],
-        rates: [],
-        chartRates: [],
         error:
-          "Failed to load all current exchange rates. Some data might be missing.",
+          messages.join(" | ") + " Please refresh the page or try again later.",
       };
     }
 
     return {
-      rates: currentRatesResponse.data,
-      chartRates: chartRatesResponse.data,
-      officialRate: usdRateResponse.data[0],
-      currencies: allCurrenciesResponse.data,
+      rates: (currentRatesResponse as ApiSuccessResponse<Rate[]>).data,
+      chartRates: (chartRatesResponse as ApiSuccessResponse<Rate[]>).data,
+      officialRate: (usdRateResponse as ApiSuccessResponse<Rate[]>).data[0],
+      currencies: (allCurrenciesResponse as ApiSuccessResponse<Currency[]>)
+        .data,
     };
   } catch (error) {
-    console.error(
-      "Loader Error: An unexpected error occurred during data fetching:",
-      error
-    );
+    console.error("Loader Error: An unexpected error occurred:", error);
     return {
-      officialRate: null,
-      rates: [],
-      currencies: [],
-      chartRates: [],
-      error: "An unexpected error occurred. Please refresh the page.",
+      error:
+        "An unexpected error occurred. Please refresh the page or try again later.",
     };
   }
 }
 
 export default function HomePage({ loaderData }: Route.ComponentProps) {
-  const { officialRate, rates, chartRates, currencies, error } = loaderData;
-
-  if (!officialRate) {
+  if ("error" in loaderData) {
     return (
-      <main className="w-full px-4 sm:px-6 md:px-8 lg:max-w-[1080px] lg:mx-auto space-y-10">
-        <NavigationBar />
-        <div className="flex flex-col items-center justify-center h-96">
-          <h2 className="text-xl font-semibold text-red-600">
-            {error || "Failed to load exchange rate data."}
-          </h2>
+      <React.Fragment>
+        <div className="flex flex-col items-center justify-center h-96 gap-5">
+          <h1 className="text-4xl font-bold text-primary text-center">
+            Somthing went wrong
+          </h1>
+          <p className="text-center">
+            {loaderData.error || "Failed to load exchange rate data."}
+          </p>
         </div>
-        <SiteFooter />
-      </main>
+      </React.Fragment>
     );
   }
 
+  const { officialRate, rates, chartRates, currencies } = loaderData;
+
   return (
-    <main className="w-full px-4 sm:px-6 md:px-8 lg:max-w-[1080px] lg:mx-auto space-y-10">
-      <NavigationBar />
+    <React.Fragment>
       <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
         <div className="col-span-1 md:col-span-2">
           <ExchangeRateOverviewCard
@@ -147,7 +173,6 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
       />
       <RatesDataTable data={rates} />
       <FrequentlyAskedQuestions supportedCurrencies={currencies} />
-      <SiteFooter />
-    </main>
+    </React.Fragment>
   );
 }

@@ -1,3 +1,4 @@
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,10 +7,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
-
 import type { Route } from "./+types/root";
 import "./app.css";
+import NavigationBar from "./components/navigation-bar";
+import SiteFooter from "./components/footer";
+import React from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -49,13 +51,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <NuqsAdapter>
-      <Outlet />;
+      <main className="w-full px-4 sm:px-6 md:px-8 lg:max-w-[1080px] lg:mx-auto space-y-10">
+        <NavigationBar />
+        <Outlet />
+        <SiteFooter />
+      </main>
     </NuqsAdapter>
   );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
+  let message = "Something went wrong";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
@@ -71,14 +77,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <React.Fragment>
+      <div className="text-center space-y-5 justify-center items-center flex flex-col py-24 ">
+        <h1 className="text-4xl font-bold text-primary ">{message}</h1>
+        <p>{details}</p>
+        {stack && (
+          <pre className="w-full p-4 overflow-x-auto">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </div>
+    </React.Fragment>
   );
 }
