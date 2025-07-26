@@ -10,8 +10,8 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
     <footer className="w-full mt-16 py-10 border-t border-border bg-background text-foreground">
       <div className="container mx-auto flex flex-col lg:flex-row justify-between items-center lg:items-start gap-8 px-4">
         <div className="flex flex-col gap-4 text-center lg:text-left lg:w-2/5 max-w-lg">
-          <h3 className="text-2xl font-semibold text-primary">
-            Zimbabwe Exchange Rates
+          <h3 className="font-semibold text-primary">
+            Zimbabwe Gold Exchange Rates
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             An open-source platform to stay updated with real-time ZWG bank
@@ -53,7 +53,7 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
             </a>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            © {currentYear} Zimbabwe Exchange Rates. All rights reserved.
+            © {currentYear} Zimbabwe Gold Exchange Rates. All rights reserved.
           </p>
         </div>
 

@@ -6,3 +6,5 @@
 /build/
 .env
 .env.production
+*.log
+*.logs

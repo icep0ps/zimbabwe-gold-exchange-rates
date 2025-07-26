@@ -1,9 +1,4 @@
-import {
-  CalendarIcon,
-  DollarSign,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import { CalendarIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import {
@@ -17,10 +12,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { currencies } from "country-data";
-import type { Currency } from "~/lib/types";
+import type { Rate } from "~/lib/types";
 
 interface Props {
-  data: Currency[];
+  data: Rate[];
 }
 
 export default function RatesDataTable({ data }: Props) {
@@ -47,8 +42,7 @@ export default function RatesDataTable({ data }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="space-y-2">
+      <div className="space-y-2 scroll-mt-20" id="exchange-rates">
         <h2 className="text-3xl font-bold text-primary text-center sm:text-left">
           All Exchange Rates
         </h2>

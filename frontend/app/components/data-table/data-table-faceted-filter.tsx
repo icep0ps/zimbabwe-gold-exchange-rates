@@ -21,7 +21,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/utils.js";
 import * as React from "react";
 
 interface DataTableFacetedFilterProps<TData, TValue> {

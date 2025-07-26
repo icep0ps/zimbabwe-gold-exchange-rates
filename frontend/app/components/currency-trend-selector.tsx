@@ -3,7 +3,7 @@ import CurrencyButtons from "./currency-buttons";
 import type { Currency } from "~/lib/types";
 
 interface CurrencyTrendSelectorProps {
-  allCurrencies: { name: string }[];
+  allCurrencies: Currency[];
 }
 
 const TOP_CURRENCIES_FILTER = ["USD", "EUR", "GBP", "ZAR", "CAD"];
@@ -21,23 +21,8 @@ export default function CurrencyTrendSelector({
         Select a currency to view exchange rate trends:
       </h3>
       <div className="flex flex-wrap lg:flex-col gap-3 w-full justify-center lg:justify-start">
-        <Suspense fallback={<CurrencyButtonsSkeleton />}>
-          <CurrencyButtons currencies={top5Currencies} />
-        </Suspense>
+        <CurrencyButtons currencies={top5Currencies} />
       </div>
     </aside>
-  );
-}
-
-function CurrencyButtonsSkeleton() {
-  return (
-    <>
-      {TOP_CURRENCIES_FILTER.map((currency) => (
-        <div
-          key={currency}
-          className="flex items-center gap-2 p-3 w-full max-w-[150px] lg:max-w-none bg-muted animate-pulse rounded-md h-10"
-        />
-      ))}
-    </>
   );
 }
