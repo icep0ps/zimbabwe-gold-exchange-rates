@@ -1,14 +1,19 @@
+import { relations } from "drizzle-orm";
 import {
   date,
   decimal,
+  integer,
   pgTable,
-  primaryKey,
+  serial,
+  text,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const currencies = pgTable(
-  "currencies",
+export const rates = pgTable(
+  "rates",
   {
+    id: serial("id").primaryKey(),
     currency: varchar("currency", { length: 255 }).notNull(),
     bid: decimal("bid").notNull(),
     ask: decimal("ask").notNull(),
@@ -17,16 +22,24 @@ export const currencies = pgTable(
     ask_rate_zwg: decimal("ask_rate_zwg").notNull(),
     mid_rate_zwg: decimal("mid_rate_zwg").notNull(),
     created_at: date("created_at", { mode: "string" }).defaultNow().notNull(),
+    previous_rate: integer("previous_rate"),
   },
   (table) => {
-    return [
-      {
-        currencyCreatedAtPK: primaryKey({
-          columns: [table.currency, table.created_at],
-        }),
-      },
-    ];
+    return [unique().on(table.currency, table.created_at)];
   },
 );
 
-export type NewCurrency = typeof currencies.$inferInsert;
+export const monthlyExchangeRatesURLs = pgTable("monthly_exchange_rates_urls", {
+  id: varchar("id").primaryKey().unique(),
+  url: text("url").notNull(),
+});
+
+export const ratesRelation = relations(rates, ({ one }) => ({
+  rate: one(rates, {
+    fields: [rates.previous_rate],
+    references: [rates.id],
+  }),
+}));
+
+export type Rate = typeof rates.$inferSelect;
+export type NewRate = typeof rates.$inferInsert;
