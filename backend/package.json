@@ -7,7 +7,8 @@
     "test": "vitest",
     "build": "tsc",
     "start": "node src/index.js",
-    "get-rates": "npx tsx ./src/rates/script.ts",
+    "get-rates": "npx tsx ./src/scripts/main.ts",
+    "get-latest-rates": "npx tsx ./src/scripts/get-latest-rate-script.ts",
     "db:studio": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit studio",
     "db:push": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit push"
   },
@@ -22,6 +23,7 @@
     "hono": "^4.7.11",
     "pdf2json": "^3.1.6",
     "pg": "^8.16.0",
+    "winston": "^3.17.0",
     "zod": "^3.25.67"
   },
   "devDependencies": {

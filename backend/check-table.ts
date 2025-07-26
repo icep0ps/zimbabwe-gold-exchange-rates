@@ -1,13 +1,13 @@
 import { Client } from "pg";
-import { env } from "./env.js";
+import { process.env } from "./process.env.js";
 
 async function checkTableExistence(): Promise<void> {
   const client = new Client({
-    host: env.POSTGRES_HOST,
-    port: parseInt(env.POSTGRES_PORT),
-    user: env.POSTGRES_USER,
-    password: env.POSTGRES_PASSWORD,
-    database: env.POSTGRES_DB,
+    host: process.env.POSTGRES_HOST,
+    port: parseInt(process.env.POSTGRES_PORT),
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
   });
 
   try {
@@ -16,7 +16,7 @@ async function checkTableExistence(): Promise<void> {
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_name = 'currencies'
+                WHERE table_schema = 'public' AND table_name = 'rates'
             ) AS table_existence;
         `);
     const tableExists = res.rows[0].table_existence;
