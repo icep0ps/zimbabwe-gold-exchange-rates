@@ -1,10 +1,14 @@
-import fs from "fs";
-import "dotenv/config";
-import https, { Agent } from "https";
-import { type IncomingMessage } from "http";
-import * as cheerio from "cheerio";
 import axios, { type AxiosResponse } from "axios";
+import * as cheerio from "cheerio";
+import "dotenv/config";
+import { eq } from "drizzle-orm";
+import fs from "fs";
+import { type IncomingMessage } from "http";
+import https, { Agent } from "https";
 import path from "path";
+import db from "../db/index.js";
+import { monthlyExchangeRatesURLs } from "../db/schema.js";
+import { scriptLogger } from "../utils.js";
 
 const agent: Agent = new https.Agent({
   rejectUnauthorized: false,
@@ -44,56 +48,84 @@ export async function getMonthPageURL(
   targetMonth: number,
   targetYear: number,
 ): Promise<string> {
-  console.log(
-    `Searching for ${targetMonth}/${targetYear} page URL from: ${FULL_EXCHANGE_RATES_URL}`,
-  );
+  const MONTHLY_RATE_PAGE_ID = `${targetMonth}-${targetYear}`;
   try {
-    let $: cheerio.CheerioAPI;
-    if (
-      process.env.NODE_ENV === "production" ||
-      process.env.NODE_ENV === "development"
-    ) {
-      const response: AxiosResponse<string> = await axios.post(
-        FULL_EXCHANGE_RATES_URL,
-        "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
-        {
-          httpsAgent: agent,
-        },
-      );
-
-      $ = cheerio.load(response.data);
-    } else {
-      const buffer = fs.readFileSync(
-        `${process.cwd()}/__tests__/rates/pages/exchange-rates.html`,
-      );
-      $ = cheerio.loadBuffer(buffer);
-    }
-
-    const monthLinks = $("div.page-header h2");
+    scriptLogger.info(
+      `Searching for ${MONTHLY_RATE_PAGE_ID} page URL from Database`,
+    );
 
     let foundMonthUrl: string | undefined;
 
-    monthLinks.each((_, element) => {
-      const linkText = $(element).clone().children().filter("a").attr("href");
+    const [monthlyRatesUrl] = await db
+      .select()
+      .from(monthlyExchangeRatesURLs)
+      .where(eq(monthlyExchangeRatesURLs.id, MONTHLY_RATE_PAGE_ID))
+      .limit(1);
 
-      if (linkText) {
-        // Simple regex to extract month name and year from the link text
-        const match = linkText?.match(/([a-z]+)-([0-9]+)/g)?.pop();
-        if (match) {
-          const [monthName, year] = match.split("-");
-          const monthNumber = monthNames[monthName];
+    if (!monthlyRatesUrl) {
+      scriptLogger.warn(
+        `Could not find ${MONTHLY_RATE_PAGE_ID} page URL from Database`,
+      );
+      scriptLogger.info(
+        `Searching for ${MONTHLY_RATE_PAGE_ID} page URL from: ${FULL_EXCHANGE_RATES_URL}`,
+      );
+
+      let $: cheerio.CheerioAPI;
+      if (
+        process.env.NODE_ENV === "production" ||
+        process.env.NODE_ENV === "development"
+      ) {
+        const response: AxiosResponse<string> = await axios.post(
+          FULL_EXCHANGE_RATES_URL,
+          "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
+          {
+            httpsAgent: agent,
+          },
+        );
+
+        $ = cheerio.load(response.data);
+      } else {
+        const buffer = fs.readFileSync(
+          `${process.cwd()}/__tests__/scripts/pages/exchange-rates.html`,
+        );
+        $ = cheerio.loadBuffer(buffer);
+      }
+
+      const monthLinks = $("div.page-header h2");
+
+      monthLinks.each((_, element) => {
+        const linkElement = $(element).clone().children().filter("a");
+
+        if (linkElement) {
+          const link = linkElement.attr("href");
+          const [monthName, year] = linkElement.text().trim().split(" ");
+          const monthNumber = monthNames[monthName.toLocaleLowerCase()];
           if (monthNumber === targetMonth && parseInt(year) === targetYear) {
-            foundMonthUrl = `${RBZ_BASE_URL}${linkText}`;
-            return false; // Break out of .each loop
+            foundMonthUrl = `${RBZ_BASE_URL}${link}`;
+            return false;
           }
         }
-      }
-    });
+      });
 
-    if (!foundMonthUrl) {
-      throw new Error(
-        `Could not find the exchange rates URL for ${targetMonth}/${targetYear}. It might be on a paginated page not yet fetched, or the selector is outdated.`,
-      );
+      if (foundMonthUrl) {
+        const [newPageUrl] = await db
+          .insert(monthlyExchangeRatesURLs)
+          .values({
+            id: MONTHLY_RATE_PAGE_ID,
+            url: foundMonthUrl,
+          })
+          .returning({ id: monthlyExchangeRatesURLs.id });
+        if (newPageUrl)
+          scriptLogger.info(
+            `Successfully added monthly rate page url for ${MONTHLY_RATE_PAGE_ID}`,
+          );
+      } else {
+        throw Error(
+          `Could not find the exchange rates URL for ${MONTHLY_RATE_PAGE_ID}. It might be on a paginated page not yet fetched, or the selector is outdated.`,
+        );
+      }
+    } else {
+      foundMonthUrl = monthlyRatesUrl.url;
     }
 
     return foundMonthUrl;
@@ -122,8 +154,7 @@ export async function getDailyRatePdfDownloadURL(
   monthPageUrl: string,
   targetDay: number,
 ): Promise<string> {
-  console.log(`Navigating to monthly rates page: ${monthPageUrl}`);
-
+  scriptLogger.info(`Navigating to monthly rates page: ${monthPageUrl}`);
   try {
     let $: cheerio.CheerioAPI;
     if (
@@ -137,30 +168,15 @@ export async function getDailyRatePdfDownloadURL(
       $ = cheerio.load(response.data);
     } else {
       const buffer = fs.readFileSync(
-        `${process.cwd()}/__tests__/rates/pages/daily-exchange-rates.html`,
+        `${process.cwd()}/__tests__/scripts/pages/daily-exchange-rates.html`,
       );
       $ = cheerio.loadBuffer(buffer);
     }
 
-    let foundPdfUrl: string | undefined;
-
-    $("tbody tr").each((_, rowElement) => {
-      const $row = $(rowElement);
-      const dayCellText = $row.find("td:nth-child(1)").text().trim(); // Get text from the first <td> (e.g., "02")
-      const pdfLinkElement = $row.find("td:nth-child(2) a[href$='.pdf']"); // Get the PDF link from the second <td>
-
-      if (dayCellText && pdfLinkElement.length > 0) {
-        const dayInTable = parseInt(dayCellText, 10);
-
-        if (dayInTable === targetDay) {
-          const partialUrl = pdfLinkElement.attr("href");
-          if (partialUrl) {
-            foundPdfUrl = `${RBZ_BASE_URL}${partialUrl}`;
-            return false;
-          }
-        }
-      }
-    });
+    let foundPdfUrl: string | undefined = getDailyRatePdfDownloadURLFromHTML(
+      $,
+      targetDay,
+    );
 
     if (!foundPdfUrl) {
       throw new Error(
@@ -196,7 +212,7 @@ export async function downloadFile(
   fileUrl: string,
   outputPath: string,
 ): Promise<void> {
-  console.log(`Downloading file from: ${fileUrl} to: ${outputPath}`);
+  scriptLogger.warn(`Downloading file from: ${fileUrl} to: ${outputPath}`);
   const outputDir: string = path.dirname(outputPath);
   await fs.promises.mkdir(outputDir, { recursive: true });
 
@@ -218,7 +234,7 @@ export async function downloadFile(
 
         writer.on("finish", () => {
           writer.close();
-          console.log("Download completed.");
+          scriptLogger.info("Rates PDF download completed.");
           resolve();
         });
 
@@ -247,7 +263,7 @@ export async function downloadRatesForDate(
   projectRootDir: string,
   fileName: string = "rates.pdf",
 ): Promise<void> {
-  console.log(
+  scriptLogger.info(
     `Starting PDF download process for date: ${targetDate.toDateString()}...`,
   );
   try {
@@ -260,6 +276,7 @@ export async function downloadRatesForDate(
       monthPageUrl,
       day,
     );
+
     const outputPath: string = path.join(
       projectRootDir,
       "src",
@@ -267,10 +284,9 @@ export async function downloadRatesForDate(
       fileName,
     );
 
-    await downloadFile(pdfDownloadUrl, outputPath);
-    console.log(
-      `Rates PDF for ${targetDate.toDateString()} downloaded successfully to: ${outputPath}`,
-    );
+    if (!fs.existsSync(outputPath)) {
+      await downloadFile(pdfDownloadUrl, outputPath);
+    }
   } catch (error: unknown) {
     let errorMessage =
       "An unknown error occurred during PDF download orchestration";
@@ -281,4 +297,107 @@ export async function downloadRatesForDate(
       `Error during PDF download orchestration for ${targetDate.toDateString()}: ${errorMessage}`,
     );
   }
+}
+
+export function getDailyRatePdfDownloadURLFromHTML(
+  $: cheerio.CheerioAPI,
+  targetDay: number,
+  retriesLeft: number = 3,
+) {
+  if (retriesLeft < 0) {
+    return undefined;
+  }
+
+  const link = $("tbody tr")
+    .filter(function (_, el) {
+      const $row = $(el);
+      const dayCellText = $row.find("td:nth-child(1)").text().trim();
+      const pdfLinkElement = $row.find("td:nth-child(2) a[href$='.pdf']");
+
+      if (dayCellText && pdfLinkElement.length > 0) {
+        const dayInTable = parseInt(dayCellText, 10);
+        return dayInTable === targetDay;
+      }
+      return false;
+    })
+    .find("td:nth-child(2) a[href$='.pdf']")
+    .attr("href");
+
+  if (link) {
+    if (
+      process.env.ENV === "production" ||
+      process.env.NODE_ENV === "development"
+    ) {
+      return `${RBZ_BASE_URL}${link}`;
+    }
+    return link;
+  }
+
+  targetDay--;
+  retriesLeft--;
+
+  return getDailyRatePdfDownloadURLFromHTML($, targetDay, retriesLeft);
+}
+
+/**
+ * Gets all the {@link https://www.rbz.co.zw/index.php/research/markets/exchange-rates|RBZ Exachange rates Page}
+ * and saves it on the device. (SHOULD ONLY BE USED WHEN SEEDING DATABASE)
+ */
+export async function downloadMonthyRatesHTMLPage() {
+  const outputPath: string = path.join(
+    process.cwd(),
+    "src",
+    "scripts",
+    "monthly-exchange-rates.html",
+  );
+
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.NODE_ENV === "development"
+  ) {
+    const response: AxiosResponse<string> = await axios.post(
+      FULL_EXCHANGE_RATES_URL,
+      "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
+      {
+        httpsAgent: agent,
+      },
+    );
+
+    if (response.status === 200) fs.writeFileSync(outputPath, response.data);
+    else
+      throw Error(`Failed to get monthly rates page: ${response.statusText}`);
+  }
+
+  const buffer = fs.readFileSync(outputPath);
+  const $ = cheerio.loadBuffer(buffer);
+  const monthLinks = $("div.page-header h2");
+
+  const monthLinksToInsert = monthLinks
+    .map((_, element) => {
+      const linkElement = $(element).clone().children().filter("a");
+      const link = linkElement.attr("href");
+
+      if (link) {
+        const [monthName, year] = linkElement.text().trim().split(" ");
+        const monthNumber = monthNames[monthName.toLocaleLowerCase()];
+        return {
+          id: `${monthNumber}-${year}`,
+          url: `${RBZ_BASE_URL}${link}`,
+        };
+      }
+    })
+    .toArray();
+
+  const uniqueMonths = monthLinksToInsert.filter(
+    (value, index, self) => index === self.findIndex((t) => t.id === value.id),
+  );
+
+  const res = await db
+    .insert(monthlyExchangeRatesURLs)
+    .values(uniqueMonths)
+    .returning({ id: monthlyExchangeRatesURLs.id });
+
+  scriptLogger.info(
+    `Successfully created ${res.length} monthly rates page urls in database!`,
+  );
 }

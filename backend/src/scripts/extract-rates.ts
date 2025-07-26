@@ -1,4 +1,5 @@
 import PDFParser from "pdf2json";
+import { logger } from "../utils.js";
 
 interface PDFTextNode {
   x: number;
@@ -35,6 +36,7 @@ export interface ExtractedRates {
     bid_zwl: number;
     ask_zwl: number;
     mid_zwl: number;
+    created_at: string;
   };
 }
 
@@ -43,21 +45,23 @@ export interface ExtractedRates {
  * @param {string} pdfPath - The full path to the PDF file to be parsed.
  * @returns {Promise<ExtractedRates>} A promise that resolves to an object containing the extracted rates.
  */
-export async function readRatesPdf(pdfPath: string): Promise<ExtractedRates> {
-  console.log("Extracting rates from PDF...");
+export async function readRatesPdf(
+  pdfPath: string,
+  createdAt: string,
+): Promise<ExtractedRates> {
+  logger.info("Extracting rates from PDF...");
 
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
 
     pdfParser.on("pdfParser_dataError", (errData: { parserError: Error }) => {
-      console.error("PDF Parser Error:", errData.parserError.message);
+      logger.error("PDF Parser Error:", errData.parserError.message);
       reject(new Error(`Failed to parse PDF: ${errData.parserError.message}`));
     });
 
-    // Event listener when PDF data is ready
     pdfParser.on("pdfParser_dataReady", (pdfData: PDFData) => {
       try {
-        const rates: ExtractedRates = extractRatesFromPdf(pdfData);
+        const rates: ExtractedRates = extractRatesFromPdf(pdfData, createdAt);
         resolve(rates);
       } catch (error: unknown) {
         let errorMessage = "An unknown error occurred";
@@ -82,17 +86,18 @@ export async function readRatesPdf(pdfPath: string): Promise<ExtractedRates> {
  * specifically if there's a mismatch between the number of currencies found
  * and the number of rate groups.
  */
-export function extractRatesFromPdf(pdfData: PDFData): ExtractedRates {
-  console.log("Generating rates from PDF data...");
+export function extractRatesFromPdf(
+  pdfData: PDFData,
+  createdAt: string,
+): ExtractedRates {
+  logger.info("Generating rates from PDF data...");
   const rates: ExtractedRates = {};
   const texts = pdfData.Pages?.[0]?.Texts || [];
 
-  // Regular expressions for filtering and cleaning data nodes from the PDF
-  const currencyRegex = /^[A-Z]{3}(%2F[A-Z]+)?$/; // Matches currency codes like "USD" or "EUR%2FGBP"
-  const bidAskIgnoreRegex = /\b(?:BID|ASK|ZWG)\b/i; // Ignores text nodes containing "BID", "ASK", or "ZWG" (case-insensitive)
-  const whitespaceRegex = /%20/; // Matches URL-encoded whitespace
+  const currencyRegex = /^[A-Z]{3}(%2F[A-Z]+)?$/;
+  const bidAskIgnoreRegex = /\b(?:BID|ASK|ZWG)\b/i;
+  const whitespaceRegex = /%20/;
 
-  // 1. Extract and clean currency names from the text nodes
   const currencies: string[] = texts
     .filter(
       (node: PDFTextNode) =>
@@ -105,7 +110,6 @@ export function extractRatesFromPdf(pdfData: PDFData): ExtractedRates {
     )
     .map((currency: string) => currency.replace("%2F", "/"));
 
-  // 2. Extract and clean numerical rate values from the text nodes
   const ungroupedRates: number[] = texts
     .map((node: PDFTextNode) => {
       const textValue = node.R?.[0]?.T;
@@ -119,30 +123,24 @@ export function extractRatesFromPdf(pdfData: PDFData): ExtractedRates {
       (item: number) => typeof item === "number" && !isNaN(item) && item !== 0,
     );
 
-  // 3. Group rates based on the number of currencies found
-  // This assumes that each currency has a consistent number of associated rate values (e.g., 6 values per currency).
   let groupedRates: number[][] = [];
 
-  // Handle case where no currencies are found to avoid division by zero
   if (currencies.length === 0) {
     throw new Error("No currencies found in the PDF. Unable to extract rates.");
   }
 
   const ratesPerCurrency: number = ungroupedRates.length / currencies.length;
 
-  // Validate if the rates can be evenly divided among the currencies
   if (!Number.isInteger(ratesPerCurrency) || ratesPerCurrency === 0) {
     throw new Error(
       "Error: Rates per currency are not consistent or no rates found. PDF structure might have changed.",
     );
   }
 
-  // Slice the ungrouped rates into groups, each corresponding to a currency
   for (let i = 0; i < ungroupedRates.length; i += ratesPerCurrency) {
     groupedRates.push(ungroupedRates.slice(i, i + ratesPerCurrency));
   }
 
-  // 4. Validate the number of grouped rates matches the number of currencies and assign them
   if (groupedRates.length !== currencies.length) {
     throw new Error(
       `Error extracting data from PDF: Number of rates groups (${groupedRates.length}) does not match number of currencies (${currencies.length}).`,
@@ -159,13 +157,15 @@ export function extractRatesFromPdf(pdfData: PDFData): ExtractedRates {
         bid_zwl: rateArray[3],
         ask_zwl: rateArray[4],
         mid_zwl: rateArray[5],
+        created_at: createdAt,
       };
     } else {
-      console.warn(
+      logger.warn(
         `Warning: Not enough rate values found for currency: ${currency}. Expected 6, got ${rateArray.length}. Skipping this currency.`,
       );
     }
   });
 
+  logger.info("Rates extraction complete.");
   return rates;
 }
