@@ -17,8 +17,8 @@ import { MenuIcon } from "lucide-react";
 
 const navLinks = [
   { title: "Home", href: "/" },
-  { title: "Exchange Rates", href: "/#exchange_rate" },
-  { title: "API (Soon)", href: "/#currency-converter-section" },
+  { title: "Exchange Rates", href: "/#exchange-rates" },
+  { title: "API (Soon)", href: "#" },
   { title: "Contact", href: "/#faq-section" },
 ];
 
@@ -27,8 +27,8 @@ const NavigationBar: React.FC = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background mb-0!">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <a href="/" className="mr-6 flex items-center space-x-2">
-          <span className="font-bold  text-primary">
-            Zimbabwe Exchange Rates
+          <span className="font-bold text-primary">
+            Zimbabwe Gold Exchange Rates
           </span>
         </a>
 

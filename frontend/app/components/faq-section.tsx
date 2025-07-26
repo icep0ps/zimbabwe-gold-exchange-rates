@@ -16,7 +16,10 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
   supportedCurrencies,
 }) => {
   return (
-    <section className="flex flex-col gap-6 py-10" id="faq-section">
+    <section
+      className="flex flex-col gap-6 py-10 scroll-mt-14"
+      id="faq-section"
+    >
       <div className="text-center sm:text-left">
         <h2 className="capitalize text-3xl font-bold text-primary mb-3">
           Frequently Asked Questions
