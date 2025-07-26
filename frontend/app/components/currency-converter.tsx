@@ -1,13 +1,13 @@
 "use client";
 
-import type { Currency } from "~/lib/types";
+import type { Currency, Rate } from "~/lib/types";
 import { type FC, useEffect, useState, type ChangeEvent } from "react";
 import CurrencyInputSection from "./currency-converter-inputs";
 import { calculateExchange } from "~/lib/utils";
 
 interface CurrencyConverterProps {
-  primaryBaseCurrency: Currency;
-  allAvailableCurrencies: Currency[];
+  primaryBaseCurrency: Rate;
+  allAvailableCurrencies: Rate[];
 }
 
 const CurrencyConverter: FC<CurrencyConverterProps> = ({

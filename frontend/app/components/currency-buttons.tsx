@@ -1,6 +1,7 @@
 import { useQueryState } from "nuqs";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
+import { currencies as currencyData } from "country-data";
 
 interface CurrencyButtonsProps {
   currencies: { name: string }[];
@@ -33,7 +34,9 @@ export default function CurrencyButtons({ currencies }: CurrencyButtonsProps) {
           )}
         >
           {curr.name}
-          <span className="hidden sm:inline-block text-sm">({curr.name})</span>
+          <span className="hidden sm:inline-block text-sm">
+            ({currencyData[curr.name]?.name})
+          </span>
         </Button>
       ))}
     </>

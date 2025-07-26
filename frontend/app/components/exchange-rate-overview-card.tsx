@@ -1,27 +1,26 @@
-import { InfoIcon } from "lucide-react";
-import { cn } from "~/lib/utils";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import ChartAreaLinear from "./chart";
-import type { Currency } from "~/lib/types";
 import { currencies } from "country-data";
-import { useQueryState } from "nuqs";
 import {
+  differenceInCalendarMonths,
+  differenceInDays,
+  format,
   subDays,
   subMonths,
-  format,
-  differenceInDays,
-  differenceInCalendarMonths,
 } from "date-fns";
+import { InfoIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { useMemo } from "react";
+import type { Rate } from "~/lib/types";
+import { cn } from "~/lib/utils";
+import ChartAreaLinear from "./chart";
+import { Badge } from "./ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import {
   Select,
   SelectContent,
@@ -31,8 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-// Helper function to format a Date object to INSEE-MM-DD string
 function formatIsoDate(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
@@ -46,8 +45,8 @@ function formatDate(dateString: string) {
 }
 
 interface ExchangeRateOverviewCardProps {
-  officialRate: Currency;
-  chartRates: Currency[];
+  officialRate: Rate;
+  chartRates: Rate[];
   allAvailableCurrencies: { name: string }[];
 }
 
@@ -169,7 +168,7 @@ export default function ExchangeRateOverviewCard({
         }
       }
     }
-    return "7d";
+    return "14d";
   }, [startDateParam, endDateParam]);
 
   return (
@@ -188,7 +187,7 @@ export default function ExchangeRateOverviewCard({
           <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
             {currentRate.toFixed(4)}{" "}
             <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-              ZWG
+              Zimbabwe Gold (ZWG)
             </span>
           </h1>
           <h2
