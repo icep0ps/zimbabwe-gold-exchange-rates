@@ -8,12 +8,12 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart";
-import { useMemo } from "react"; // Ensure useMemo is imported
+import { useMemo } from "react";
 
 interface ChartAreaLinearProps {
   data: Array<Record<string, any>>;
-  dataKey: string; // Expected to be "mid_rate_zwg"
-  timeKey: string; // Expected to be "created_at"
+  dataKey: string;
+  timeKey: string;
 }
 
 export default function ChartAreaLinear({
@@ -21,9 +21,9 @@ export default function ChartAreaLinear({
   dataKey,
   timeKey,
 }: ChartAreaLinearProps) {
-  // --- Data Pre-processing ---
-  // Use useMemo to process the data, ensuring 'dataKey' values are numbers.
-  // This helps prevent 'NaN' errors in Recharts.
+  const numberOfRates = data.length;
+  const fourteenDays = 14;
+
   const processedData = useMemo(() => {
     if (!Array.isArray(data)) {
       console.warn("ChartAreaLinear: 'data' prop is not an array.", data);
@@ -32,53 +32,41 @@ export default function ChartAreaLinear({
 
     return data
       .map((item, index) => {
-        // Attempt to parse the value for the specified dataKey
         const value = parseFloat(item[dataKey]);
 
-        // If the parsed value is NaN, log a warning and return null for this item
-        // It will be filtered out next.
         if (isNaN(value)) {
           console.warn(
             `ChartAreaLinear: Skipping data point at index ${index} due to invalid value for '${dataKey}':`,
             item[dataKey]
           );
-          return null; // Mark for removal
+          return null;
         }
-        // Return a new object with the dataKey value as a number
         return { ...item, [dataKey]: value };
       })
-      .filter(Boolean); // Filter out any nulls (invalid data points)
-  }, [data, dataKey]); // Re-process if the original data or dataKey changes
+      .filter(Boolean);
+  }, [data, dataKey]);
 
-  // --- Chart Configuration ---
   const chartConfig: ChartConfig = useMemo(
     () => ({
       [dataKey]: {
-        label: "Exchange Rate (ZWG)", // More descriptive label
+        label: "Exchange Rate (ZWG)",
         color: "hsl(var(--chart-1))",
       },
     }),
     [dataKey]
   );
 
-  // --- X-Axis Tick Formatter ---
-  // Function to format X-Axis ticks from "YYYY-MM-DD" to "DD Mon"
   const formatXAxisDateTick = (value: string) => {
     const date = new Date(value);
-    // Check for invalid date to prevent errors
     if (isNaN(date.getTime())) {
-      // console.warn("ChartAreaLinear: Invalid date value for X-Axis tick:", value);
-      return value; // Return original value if invalid
+      return value;
     }
     return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
   };
 
-  // --- Y-Axis Tick Formatter ---
-  // Function to format Y-Axis ticks to 3 decimal places
   const formatYAxisRateTick = (value: number) => {
-    // Ensure value is a number before toFixed
     if (typeof value !== "number" || isNaN(value)) {
-      return ""; // Or some other placeholder for invalid numbers
+      return "";
     }
     return value.toFixed(3);
   };
@@ -89,7 +77,7 @@ export default function ChartAreaLinear({
         <ChartContainer config={chartConfig} className="p-0 max-h-52 w-full">
           <AreaChart
             accessibilityLayer
-            data={processedData} // Use the processed and validated data here
+            data={processedData}
             margin={{
               top: 5,
               right: 0,
@@ -97,26 +85,42 @@ export default function ChartAreaLinear({
               bottom: 0,
             }}
           >
-            <CartesianGrid vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
+              interval={numberOfRates > fourteenDays ? 2 : 0}
               dataKey={timeKey}
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              tickMargin={10}
               tickFormatter={formatXAxisDateTick}
             />
             <YAxis
-              dataKey={dataKey} // This will be "mid_rate_zwg"
+              dataKey={dataKey}
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
-              domain={["dataMin - 0.05", "dataMax + 0.05"]} // Adjust domain slightly
+              tickMargin={10}
+              domain={["dataMin - 0.5", "dataMax + 0.5"]}
               tickFormatter={formatYAxisRateTick}
             />
 
             <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" hideLabel />}
+              cursor={{ strokeDasharray: "5,5" }}
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  labelFormatter={(label) => {
+                    const date = new Date(label);
+                    if (isNaN(date.getTime())) {
+                      return label;
+                    }
+                    return date.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    });
+                  }}
+                />
+              }
             />
 
             <defs>
@@ -127,7 +131,7 @@ export default function ChartAreaLinear({
             </defs>
 
             <Area
-              dataKey={dataKey} // This will plot "mid_rate_zwg"
+              dataKey={dataKey}
               type="linear"
               fill="url(#fillRate)"
               fillOpacity={0.4}
