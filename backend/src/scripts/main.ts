@@ -3,14 +3,14 @@ import { Pool } from "pg";
 import readline from "readline";
 import { rates } from "../db/schema.js";
 import { seedRatesToDatabase } from "../db/seeder.js";
-import { scriptLogger } from "../utils.js";
+import { getDaysBetweenDates, scriptLogger } from "../utils.js";
 import { runRateExtractionProcess } from "./get-latest-rate-script.js";
 import { runBatchRateExtractionProcess } from "./get-rates-script.js";
 
 const pool = new Pool({
   ssl: false,
   host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT as string),
+  port: Number(process.env.POSTGRES_PORT) || 5432,
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
@@ -27,30 +27,28 @@ const reader = readline.createInterface({
 });
 
 function askQuestion(query: string): Promise<string> {
-  return new Promise((resolve) => {
-    reader.question(query, resolve);
-  });
+  return new Promise((resolve) => reader.question(query, resolve));
 }
 
-(async () => {
+async function run() {
   try {
     const choice = await askQuestion(
-      `Which rates do you want to retrieve? (Enter 1 or 2) \n\n` +
+      `Which rates do you want to retrieve? (Enter 1 or 2)\n\n` +
         `[1] Latest rates (most recent)\n` +
         `[2] Batch of rates (range of dates)\n\nYour choice: `,
     );
 
     if (choice === "1") {
       const result = await runRateExtractionProcess();
+
       if ("data" in result) {
         await seedRatesToDatabase(db, [result]);
         scriptLogger.info(
-          `\nLatest rate inserted for ${new Date().toDateString()}.\n`,
+          `Latest rate inserted for ${new Date().toDateString()}.\n`,
         );
       } else {
         scriptLogger.error(`Failed to extract latest rate: ${result.message}`);
       }
-      reader.close();
     } else if (choice === "2") {
       const startDateInput = await askQuestion(
         "Enter start date (YYYY-MM-DD): ",
@@ -60,32 +58,61 @@ function askQuestion(query: string): Promise<string> {
       const startDate = new Date(startDateInput);
       const endDate = new Date(endDateInput);
 
-      const results = await runBatchRateExtractionProcess(startDate, endDate);
-
-      const errors = results.filter((r) => !r.success);
-      const successfulData = results.filter((r) => r.success);
-
-      if (errors.length > 0) {
-        scriptLogger.error(`\nEncountered ${errors.length} error(s):`);
-        errors.forEach((e) => scriptLogger.error(e.message));
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        scriptLogger.error("Invalid date format. Please use YYYY-MM-DD.");
+        return;
       }
 
-      if (successfulData.length > 0) {
-        await seedRatesToDatabase(db, successfulData);
-        scriptLogger.info(
-          `\nSuccessfully inserted rates from ${startDate.toDateString()} to ${endDate.toDateString()}.\n`,
+      if (endDate < startDate) {
+        scriptLogger.error("End date must be after start date.");
+        return;
+      }
+
+      const rangeInDays = getDaysBetweenDates(startDate, endDate);
+      const MAX_DAYS_BEFORE_WARNING = 31;
+
+      if (rangeInDays > MAX_DAYS_BEFORE_WARNING) {
+        scriptLogger.warn(
+          `You are about to retrieve rates for ${rangeInDays} days. This may take time.`,
+        );
+        const confirmation = await askQuestion("Proceed? (yes/no): ");
+        if (confirmation.toLowerCase() !== "yes") {
+          scriptLogger.info("Script aborted by user.");
+          return;
+        }
+      }
+
+      scriptLogger.info("Fetching rates...");
+      const results = await runBatchRateExtractionProcess(startDate, endDate);
+
+      const failed = results.filter((r) => !r.success);
+      const succeeded = results.filter((r) => r.success);
+
+      if (failed.length > 0) {
+        scriptLogger.error(`${failed.length} rate(s) failed to extract:`);
+        failed.forEach((e, i) =>
+          scriptLogger.error(`  ${i + 1}. ${e.message}`),
         );
       }
 
-      reader.close();
+      if (succeeded.length > 0) {
+        await seedRatesToDatabase(db, succeeded);
+        scriptLogger.info(
+          `Successfully inserted ${succeeded.length} rate(s) from ${startDate.toDateString()} to ${endDate.toDateString()}.\n`,
+        );
+      } else {
+        scriptLogger.warn("No valid rates were retrieved.");
+      }
     } else {
-      scriptLogger.warn("Invalid input. Please enter either 1 or 2.");
-      reader.close();
+      scriptLogger.warn("Invalid selection. Please enter either 1 or 2.");
     }
   } catch (error) {
     scriptLogger.error(
       `An unexpected error occurred: ${(error as Error).message}`,
     );
+  } finally {
     reader.close();
   }
-})();
+}
+
+run();
