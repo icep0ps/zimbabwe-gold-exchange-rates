@@ -1,9 +1,9 @@
 "use client";
 
-import type { Currency, Rate } from "~/lib/types";
-import { type FC, useEffect, useState, type ChangeEvent } from "react";
-import CurrencyInputSection from "./currency-converter-inputs";
+import { useEffect, useState, type ChangeEvent, type FC } from "react";
+import type { Rate } from "~/lib/types";
 import { calculateExchange } from "~/lib/utils";
+import CurrencyInputSection from "./currency-converter-inputs";
 
 interface CurrencyConverterProps {
   primaryBaseCurrency: Rate;
@@ -15,7 +15,7 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
   allAvailableCurrencies,
 }) => {
   const [secondarySelectedCurrency, setSecondarySelectedCurrency] =
-    useState<Currency>(() => {
+    useState<Rate>(() => {
       return (
         allAvailableCurrencies.find((curr) => curr.currency.trim() === "USD") ||
         allAvailableCurrencies[0]
@@ -73,7 +73,7 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
         <h1 className="text-3xl font-bold text-primary">
           Exchange Rate Calculator
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           Effortlessly convert any supported currency into ZWG (Zimbabwe Gold),
           providing you with instant access to the value of ZWG against global
           supported currencies.
@@ -82,13 +82,13 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
       <div className="flex flex-col justify-between items-start gap-5 max-w-96 w-full">
         <CurrencyInputSection
           inputId="zig-amount-input"
-          fixedCurrencySymbol="ZiG"
+          fixedCurrencySymbol="ZWG"
           amount={primaryAmount}
           onAmountChange={handlePrimaryAmountChange}
           selectedCurrency={primaryBaseCurrency}
           onCurrencyChange={() => {}}
-          allCurrencies={allAvailableCurrencies}
-          inputPlaceholder="Enter ZiG amount"
+          allRates={allAvailableCurrencies}
+          inputPlaceholder="Enter ZWG amount"
         />
 
         <CurrencyInputSection
@@ -97,7 +97,7 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
           onAmountChange={handleSecondaryAmountChange}
           selectedCurrency={secondarySelectedCurrency}
           onCurrencyChange={setSecondarySelectedCurrency}
-          allCurrencies={allAvailableCurrencies}
+          allRates={allAvailableCurrencies}
           inputPlaceholder="Enter foreign currency amount"
         />
       </div>

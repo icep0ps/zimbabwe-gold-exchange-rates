@@ -1,14 +1,14 @@
 import React, { type ChangeEvent, useEffect, useState } from "react";
-import type { Currency } from "~/lib/types";
+import type { Rate } from "~/lib/types";
 import { Input } from "./ui/input";
 import { currencies } from "country-data";
 
 interface CurrencyInputSectionProps {
   amount: string;
   onAmountChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  selectedCurrency: Currency;
-  onCurrencyChange: (newCurrency: Currency) => void;
-  allCurrencies: Currency[];
+  selectedCurrency: Rate;
+  onCurrencyChange: (newCurrency: Rate) => void;
+  allRates: Rate[];
   fixedCurrencySymbol?: string;
   inputId?: string;
   inputPlaceholder?: string;
@@ -19,7 +19,7 @@ const CurrencyInputSection: React.FC<CurrencyInputSectionProps> = ({
   onAmountChange,
   selectedCurrency,
   onCurrencyChange,
-  allCurrencies,
+  allRates,
   fixedCurrencySymbol,
   inputId = "currency-amount-input",
   inputPlaceholder = "0.00",
@@ -28,16 +28,16 @@ const CurrencyInputSection: React.FC<CurrencyInputSectionProps> = ({
     selectedCurrency.currency
   );
 
-  const [recentlyUsedCurrencies, setRecentlyUsedCurrencies] = useState<
-    Currency[]
-  >(allCurrencies.slice(0, 3));
+  const [recentlyUsedCurrencies, setRecentlyUsedCurrencies] = useState<Rate[]>(
+    allRates.slice(0, 3)
+  );
 
   useEffect(() => {
     setDropdownValue(selectedCurrency.currency);
   }, [selectedCurrency.currency]);
 
   const handleCurrencySelection = (value: string) => {
-    const foundCurrency = allCurrencies.find(
+    const foundCurrency = allRates.find(
       (curr) => curr.currency.trim() === value.trim()
     );
 
@@ -77,7 +77,7 @@ const CurrencyInputSection: React.FC<CurrencyInputSectionProps> = ({
           className="px-3 py-2 outline-none rounded-lg bg-background border-input border appearance-none
                      focus:border-accent transition-colors cursor-pointer"
         >
-          {allCurrencies.map((curr) => (
+          {allRates.map((curr) => (
             <option
               value={curr.currency}
               className="bg-background text-foreground"

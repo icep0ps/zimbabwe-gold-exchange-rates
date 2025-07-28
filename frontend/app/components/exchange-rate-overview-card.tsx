@@ -102,7 +102,7 @@ export default function ExchangeRateOverviewCard({
 
   const isToday = officialRate.created_at === currentZimbabweDate;
 
-  const currentDate = formatDate(officialRate.created_at);
+  const rateLastUpdated = formatDate(officialRate.created_at);
 
   const topCurrenciesForSelect = useMemo(() => {
     return allAvailableCurrencies.filter((c) =>
@@ -201,17 +201,18 @@ export default function ExchangeRateOverviewCard({
               `(${changeSign}${percentageChange}%)`}
           </h2>
         </section>
-        <CardDescription className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <CardDescription className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-2 ">
           <span>
-            {officialRate.currency} Rate: {officialRate.mid_rate}{" "}
-            {officialRate.currency}
+            <span className="font-bold">{officialRate.currency} Rate: </span>
+            {officialRate.mid_rate} {officialRate.currency}
           </span>
           <span>•</span>
           <span>
-            {currentDate}, {currentTime} GMT+2
+            <span className="font-bold">Last updated: </span> {rateLastUpdated},{" "}
+            {currentTime} GMT+2
           </span>
           <span>•</span>
-          <span>Status:</span>
+          <span className="font-bold">Status: </span>
           <Badge
             variant="outline"
             className={cn(
