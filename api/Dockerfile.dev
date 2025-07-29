@@ -8,9 +8,8 @@ RUN npm install
 COPY ./ .
 
 EXPOSE 3001 
-RUN chmod +x ./seed-database.sh
 
-CMD ["sh", "-c", "./seed-database.sh "]
+CMD ["npm", "run", "dev"]
 
 
 

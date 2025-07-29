@@ -1,18 +1,24 @@
-name: zimbabwe_bank_rates
+name: zimbabwe_gold_exchange_rates
 
 services:
   app_dev:
-    container_name: zimbabwe_bank_rates_frontend_dev
+    container_name: zger_web_dev
     build:
-      context: ./frontend/
+      context: ./web/
       dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend/:/usr/local/app
-      - /usr/local/app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ./web/
+          target: /usr/local/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
     ports:
       - 5173:5173
     env_file:
-      - ./frontend/.env
+      - ./web/.env
     profiles: ["dev"]
     environment:
       NODE_ENV: development
@@ -21,18 +27,24 @@ services:
         condition: service_healthy
 
   api_dev:
-    container_name: zimbabwe_bank_rates_backend_dev
+    container_name: zger_api_dev
     build:
-      context: ./backend/
+      context: ./api/
       dockerfile: Dockerfile.dev
-    volumes:
-      - ./backend/:/usr/local/app
-      - /usr/local/app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ./api/
+          target: /usr/local/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
     ports:
       - 3001:3001
     profiles: ["dev"]
     env_file:
-      - ./backend/.env
+      - ./database/.env
     environment:
       NODE_ENV: development
     depends_on:
@@ -40,36 +52,37 @@ services:
         condition: service_healthy
     healthcheck:
       test:
-        ["CMD", "curl", "-f", "-s", "http://localhost:3000/api/v1/currencies"]
+        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
 
   database_dev:
-    container_name: zimbabwe_bank_rates_db_dev
-    image: postgres:latest
+    container_name: zger_db_dev
+    build:
+      context: ./database/
     volumes:
       - zbr-postgres-data-dev:/var/lib/postgresql/data
     env_file:
-      - ./backend/.env
+      - ./database/.env
     profiles: ["dev"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d zimbabwe_bank_rates"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   app_prod:
-    container_name: zimbabwe_bank_rates_frontend_prod
+    container_name: zger_web_prod
     build:
-      context: ./frontend/
+      context: ./web/
       dockerfile: Dockerfile.prod
     ports:
       - 3000:3000
     env_file:
-      - ./frontend/.env.production
+      - ./web/.env.production
     profiles: ["prod"]
     environment:
       NODE_ENV: production
@@ -78,15 +91,15 @@ services:
         condition: service_healthy
 
   api_prod:
-    container_name: zimbabwe_bank_rates_backend_prod
+    container_name: zger_api_prod
     build:
-      context: ./backend/
+      context: ./api/
       dockerfile: Dockerfile.prod
     ports:
       - 3001:3001
     profiles: ["prod"]
     env_file:
-      - ./backend/.env.production
+      - ./database/.env.production
     environment:
       NODE_ENV: production
     depends_on:
@@ -101,15 +114,16 @@ services:
       start_period: 20s
 
   database_prod:
-    container_name: zimbabwe_bank_rates_db_prod
-    image: postgres:latest
+    container_name: zger_db_prod
+    build:
+      context: ./database/
     volumes:
       - zbr-postgres-data-prod:/var/lib/postgresql/data
     env_file:
-      - ./backend/.env.production
+      - ./database/.env.production
     profiles: ["prod"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d zimbabwe_bank_rates"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
       interval: 5s
       timeout: 5s
       retries: 5

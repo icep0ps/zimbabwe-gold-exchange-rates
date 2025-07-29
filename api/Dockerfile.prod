@@ -13,10 +13,7 @@ RUN apk add --no-cache curl
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev 
 COPY --from=builder /app/dist ./
-COPY ./seed-database.sh .
-COPY ./check-table.ts .
 COPY ./src/db ./src/db
 COPY ./tsconfig.json .
 EXPOSE 3001
-RUN chmod +x ./seed-database.sh
-CMD ["sh", "-c", "./seed-database.sh production"]
+CMD ["npm", "run", "start"]

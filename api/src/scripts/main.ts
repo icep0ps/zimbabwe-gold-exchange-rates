@@ -1,25 +1,9 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 import readline from "readline";
-import { rates } from "../db/schema.js";
+import db from "../db/index.js";
 import { seedRatesToDatabase } from "../db/seeder.js";
 import { getDaysBetweenDates, scriptLogger } from "../utils.js";
 import { runRateExtractionProcess } from "./get-latest-rate-script.js";
 import { runBatchRateExtractionProcess } from "./get-rates-script.js";
-
-const pool = new Pool({
-  ssl: false,
-  host: process.env.POSTGRES_HOST,
-  port: Number(process.env.POSTGRES_PORT) || 5432,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-
-const db = drizzle(pool, { schema: { rates } });
 
 const reader = readline.createInterface({
   input: process.stdin,
