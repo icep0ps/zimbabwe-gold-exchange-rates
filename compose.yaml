@@ -1,7 +1,7 @@
 name: zimbabwe_gold_exchange_rates
 
 services:
-  app_dev:
+  web_dev:
     container_name: zger_web_dev
     build:
       context: ./web
@@ -74,7 +74,7 @@ services:
       retries: 5
       start_period: 10s
 
-  app_prod:
+  web_prod:
     container_name: zger_web_prod
     build:
       context: ./web/
