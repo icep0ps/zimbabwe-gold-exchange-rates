@@ -22,7 +22,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
-          username: icep0ops
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
@@ -31,7 +31,7 @@ jobs:
         with:
           context: "{{defaultContext}}:database"
           push: ${{ github.event_name != 'pull_request' }}
-          tags: "icep0ops/zger_db_dev:latest"
+          tags: "${{ secrets.DOCKERHUB_USERNAME }}/zger_db_dev:latest"
 
   build_api_image:
     runs-on: ubuntu-latest
@@ -50,8 +50,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
         id: build-and-push
@@ -60,7 +60,7 @@ jobs:
           context: "{{defaultContext}}:api"
           push: ${{ github.event_name != 'pull_request' }}
           file: "{context}/Dockerfile.dev"
-          tags: "icep0ops/zger_api_dev:latest"
+          tags: "${{ secrets.DOCKERHUB_USERNAME }}/zger_api_dev:latest"
 
   build_web_image:
     runs-on: ubuntu-latest
@@ -79,8 +79,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
         id: build-and-push
@@ -89,4 +89,4 @@ jobs:
           context: "{{defaultContext}}:web"
           push: ${{ github.event_name != 'pull_request' }}
           file: "{context}/Dockerfile.dev"
-          tags: "icep0ops/zger_web_dev:latest"
+          tags: "${{ secrets.DOCKERHUB_USERNAME }}/zger_web_dev:latest"
