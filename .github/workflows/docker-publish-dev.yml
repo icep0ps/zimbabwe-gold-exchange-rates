@@ -51,7 +51,7 @@ jobs:
         with:
           context: "{{defaultContext}}:${{ matrix.context }}"
           file: >-
-            ${{ matrix.uses_single_file == true && format('{0}/Dockerfile', matrix.context) || format('{0}/Dockerfile{1}', matrix.context, github.ref_name == 'main' && '.prod' || '.dev') }}
+            ${{ matrix.uses_single_file == true && 'Dockerfile' || format('Dockerfile{0}', github.ref_name == 'main' && '.prod' || '.dev') }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: >-
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.ref_name == 'main' && matrix.tag_prod || matrix.tag_dev }}
