@@ -59,7 +59,7 @@ jobs:
         with:
           context: "{{defaultContext}}:api"
           push: ${{ github.event_name != 'pull_request' }}
-          file: "{context}/Dockerfile.dev"
+          file: "Dockerfile.dev"
           tags: "${{ secrets.DOCKERHUB_USERNAME }}/zger_api_dev:latest"
 
   build_web_image:
@@ -88,5 +88,5 @@ jobs:
         with:
           context: "{{defaultContext}}:web"
           push: ${{ github.event_name != 'pull_request' }}
-          file: "{context}/Dockerfile.dev"
+          file: "Dockerfile.dev"
           tags: "${{ secrets.DOCKERHUB_USERNAME }}/zger_web_dev:latest"
