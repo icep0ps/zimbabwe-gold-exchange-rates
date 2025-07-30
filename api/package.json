@@ -4,7 +4,7 @@
   "scripts": {
     "start:entrypoint": "tsx ./entrypoint.ts",
     "dev": "tsx watch src/index.ts",
-    "test": "vitest",
+    "test": "env NODE_ENV=test vitest",
     "build": "tsc",
     "start": "node src/index.js",
     "get-rates": "npx tsx ./src/scripts/main.ts",

@@ -4,17 +4,17 @@ services:
   app_dev:
     container_name: zger_web_dev
     build:
-      context: ./web/
+      context: ./web
       dockerfile: Dockerfile.dev
     develop:
       watch:
         - action: sync
-          path: ./web/
-          target: /usr/local/app
+          path: ./web
+          target: /app
           ignore:
             - node_modules/
         - action: rebuild
-          path: package.json
+          path: ./web/package.json
     ports:
       - 5173:5173
     env_file:
@@ -29,19 +29,19 @@ services:
   api_dev:
     container_name: zger_api_dev
     build:
-      context: ./api/
+      context: ./api
       dockerfile: Dockerfile.dev
     develop:
       watch:
         - action: sync
-          path: ./api/
-          target: /usr/local/app
+          path: ./api
+          target: /app
           ignore:
             - node_modules/
         - action: rebuild
-          path: package.json
-    ports:
-      - 3001:3001
+          path: ./api/package.json
+    expose:
+      - "3001"
     profiles: ["dev"]
     env_file:
       - ./database/.env
@@ -61,7 +61,7 @@ services:
   database_dev:
     container_name: zger_db_dev
     build:
-      context: ./database/
+      context: ./database
     volumes:
       - zbr-postgres-data-dev:/var/lib/postgresql/data
     env_file:
@@ -95,8 +95,8 @@ services:
     build:
       context: ./api/
       dockerfile: Dockerfile.prod
-    ports:
-      - 3001:3001
+    expose:
+      - "3001"
     profiles: ["prod"]
     env_file:
       - ./database/.env.production

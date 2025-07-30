@@ -93,9 +93,9 @@ app.route("/api/v1/currencies", currenciesRoute);
 serve(
   {
     fetch: app.fetch,
-    port: 3001,
+    port: process.env.NODE_ENV === "test" ? 3333 : 3001,
   },
   (info) => {
-    logger.info(`Server is running on http://localhost:${info.port}`);
+    logger.info(`Serverssss is running on http://localhost:${info.port}`);
   },
 );

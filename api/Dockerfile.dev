@@ -1,14 +1,10 @@
-FROM node:24-alpine3.21 AS builder
+FROM node:24-alpine3.21 
 WORKDIR /app
-
 RUN apk add --no-cache curl
-
-COPY ./package.json ./package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm install
-COPY ./ .
-
+COPY . .
 EXPOSE 3001 
-
 CMD ["npm", "run", "dev"]
 
 
