@@ -6,7 +6,9 @@ import {
   pgTable,
   serial,
   text,
+  timestamp,
   unique,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -41,5 +43,20 @@ export const ratesRelation = relations(rates, ({ one }) => ({
   }),
 }));
 
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  endpoint: text("endpoint").notNull(),
+  expirationTime: timestamp("expiration_time", {
+    mode: "date",
+    withTimezone: false,
+  }),
+  auth: text("auth").notNull(),
+  p256dh: text("p256dh").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export type Rate = typeof rates.$inferSelect;
 export type NewRate = typeof rates.$inferInsert;
+
+export type PushSubscription = typeof pushSubscriptions.$inferInsert;
+export type NewPushSubscription = typeof pushSubscriptions.$inferSelect;

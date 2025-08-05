@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import CurrencyButtons from "./currency-buttons";
 import type { Currency } from "~/lib/types";
 

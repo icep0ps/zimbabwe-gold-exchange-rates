@@ -6,6 +6,7 @@ import ExchangeRateOverviewCard from "~/components/exchange-rate-overview-card";
 import FrequentlyAskedQuestions from "~/components/faq-section";
 import RatesDataTable from "~/components/rates-table";
 import { getItems } from "~/lib/fetcher";
+import { logger } from "~/lib/logger.server";
 import type {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -14,14 +15,22 @@ import type {
   RatesResponse,
 } from "~/lib/types";
 import type { Route } from "./+types/home";
-import { logger } from "~/lib/logger.server";
 
-const USD_RATE_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
-const ALL_RATES_ENDPOINT = `${import.meta.env.VITE_API_BASE_URL}rates/current`;
+const USD_RATE_ENDPOINT = `${
+  import.meta.env.VITE_API_BASE_URL
+}api/v1/rates/current`;
+
+const ALL_RATES_ENDPOINT = `${
+  import.meta.env.VITE_API_BASE_URL
+}api/v1/rates/current`;
+
 const HISTORICAL_RATES_ENDPOINT = `${
   import.meta.env.VITE_API_BASE_URL
-}rates/historical/`;
-const ALL_CURRENCIES_NAMES = `${import.meta.env.VITE_API_BASE_URL}currencies`;
+}api/v1/rates/historical/`;
+
+const ALL_CURRENCIES_NAMES = `${
+  import.meta.env.VITE_API_BASE_URL
+}api/v1/currencies`;
 
 export function meta({}: Route.MetaArgs) {
   return [

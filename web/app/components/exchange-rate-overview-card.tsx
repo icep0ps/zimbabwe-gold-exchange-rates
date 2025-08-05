@@ -174,17 +174,16 @@ export default function ExchangeRateOverviewCard({
   return (
     <Card className="bg-transparent border-none shadow-none col-span-1 lg:col-span-2">
       <CardHeader className="space-y-1 pb-2 px-0">
-        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+        <CardTitle className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
           {officialRate.currency} Exchange Rate
         </CardTitle>
         <CardDescription className="text-base text-gray-600 dark:text-gray-400 text-left">
           Official bank rate for 1{" "}
           {currencies[officialRate.currency.toString()]?.name ??
             officialRate.currency}{" "}
-          equals
         </CardDescription>
-        <section className="flex items-baseline gap-2 mt-2">
-          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
+        <section className="flex items-baseline gap-2 ">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
             {currentRate.toFixed(4)}{" "}
             <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
               Zimbabwe Gold (ZWG)
@@ -202,39 +201,47 @@ export default function ExchangeRateOverviewCard({
           </h2>
         </section>
         <CardDescription className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-2 ">
-          <span>
-            <span className="font-bold">{officialRate.currency} Rate: </span>
-            {officialRate.mid_rate} {officialRate.currency}
-          </span>
-          <span>•</span>
-          <span>
-            <span className="font-bold">Last updated: </span> {rateLastUpdated},{" "}
-            {currentTime} GMT+2
-          </span>
-          <span>•</span>
-          <span className="font-bold">Status: </span>
-          <Badge
-            variant="outline"
-            className={cn(
-              "px-2 py-0.5 text-xs font-semibold",
-              isToday
-                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800"
-                : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800"
-            )}
-          >
-            <span className="relative flex h-2 w-2 mr-1">
-              {isToday && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              )}
-              <span
-                className={cn(
-                  "relative inline-flex rounded-full h-2 w-2",
-                  isToday ? "bg-green-500" : "bg-yellow-500"
-                )}
-              ></span>
+          <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
+            <span>
+              <span className="font-bold">{officialRate.currency} Rate: </span>
+              {officialRate.mid_rate} {officialRate.currency}
             </span>
-            {isToday ? "Updated" : "Outdated"}
-          </Badge>
+
+            <span className="hidden sm:inline">•</span>
+
+            <span>
+              <span className="font-bold">Last updated: </span>
+              {rateLastUpdated}, {currentTime} GMT+2
+            </span>
+
+            <span className="hidden sm:inline">•</span>
+
+            <div className="flex items-center gap-1">
+              <span className="font-bold">Status:</span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "px-2 py-0.5 text-xs font-semibold",
+                  isToday
+                    ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800"
+                    : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800"
+                )}
+              >
+                <span className="relative flex h-2 w-2 mr-1">
+                  {isToday && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  )}
+                  <span
+                    className={cn(
+                      "relative inline-flex rounded-full h-2 w-2",
+                      isToday ? "bg-green-500" : "bg-yellow-500"
+                    )}
+                  ></span>
+                </span>
+                {isToday ? "Updated" : "Outdated"}
+              </Badge>
+            </div>
+          </div>{" "}
           <div className="md:hidden w-full mt-2">
             <Select
               value={targetCurrencyParam || officialRate.currency}

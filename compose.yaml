@@ -40,11 +40,10 @@ services:
             - node_modules/
         - action: rebuild
           path: ./api/package.json
-    expose:
-      - "3001"
     profiles: ["dev"]
     env_file:
       - ./database/.env
+      - ./api/.env
     environment:
       NODE_ENV: development
     depends_on:

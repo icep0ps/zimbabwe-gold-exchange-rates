@@ -4,7 +4,7 @@ GRANT ALL PRIVILEGES ON DATABASE zger TO docker;
 \c zger;
 
 CREATE TABLE monthly_exchange_rates_urls (
-  id VARCHAR PRIMARY KEY,
+  id VARCHAR PRIMARY KEY UNIQUE,
   url TEXT NOT NULL
 );
 
@@ -19,8 +19,17 @@ CREATE TABLE rates (
   mid_rate_zwg DECIMAL NOT NULL,
   created_at DATE NOT NULL DEFAULT CURRENT_DATE,
   previous_rate INTEGER,
-  
+
   CONSTRAINT unique_currency_date UNIQUE (currency, created_at),
   CONSTRAINT fk_previous_rate FOREIGN KEY (previous_rate) REFERENCES rates(id)
+);
+
+CREATE TABLE push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint TEXT NOT NULL,
+  expiration_time TIMESTAMP,
+  auth TEXT NOT NULL,
+  p256dh TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
