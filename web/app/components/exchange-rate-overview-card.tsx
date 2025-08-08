@@ -192,7 +192,7 @@ export default function ExchangeRateOverviewCard({
           <h2
             className={cn(
               "text-lg font-semibold",
-              isPositiveChange ? "text-green-600" : "text-red-600"
+              isPositiveChange ? "text-red-600" : "text-green-600"
             )}
           >
             {previousRateVal !== 0 && `${changeSign}${change} `}

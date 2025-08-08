@@ -127,15 +127,15 @@ export default function RatesDataTable({ data }: Props) {
                             <span className="flex items-center gap-1">
                               <div className={cn("p-1")}>
                                 {trend.isUp ? (
-                                  <TrendingUp className="w-3 h-3 text-green-600" />
+                                  <TrendingUp className="w-3 h-3 text-red-600" />
                                 ) : (
-                                  <TrendingDown className="w-3 h-3 text-red-600" />
+                                  <TrendingDown className="w-3 h-3 text-green-600" />
                                 )}
                               </div>
                               <span
                                 className={cn(
                                   "text-xs font-medium",
-                                  trend.isUp ? "text-green-600" : "text-red-600"
+                                  trend.isUp ? "text-red-600" : "text-green-600"
                                 )}
                               >
                                 {trend.isUp ? "+" : ""}
@@ -233,15 +233,17 @@ export default function RatesDataTable({ data }: Props) {
                             <div className="flex items-center justify-center gap-1">
                               <div className={cn("p-0.5")}>
                                 {trend.isUp ? (
-                                  <TrendingUp className="w-2.5 h-2.5 text-green-600" />
+                                  <TrendingUp className="w-2.5 h-2.5 text-red-600 " />
                                 ) : (
-                                  <TrendingDown className="w-2.5 h-2.5 text-red-600" />
+                                  <TrendingDown className="w-2.5 h-2.5 text-green-600" />
                                 )}
                               </div>
                               <span
                                 className={cn(
                                   "text-xs",
-                                  trend.isUp ? "text-green-600" : "text-red-600"
+                                  trend.isUp
+                                    ? "text-red-600"
+                                    : "text-green-600 "
                                 )}
                               >
                                 {trend.isUp ? "+" : ""}
