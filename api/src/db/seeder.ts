@@ -18,34 +18,44 @@ export async function seedRatesToDatabase(
   }
 
   try {
-    const oldestRate = dataToInsert[0];
-    const dateBeforeOldestRate = getPreviousDateString(
-      oldestRate.created_at as string,
-    );
-
-    const [oldestRatesPreviousRate] = await db
-      .select()
-      .from(ratesTable)
-      .where(
-        and(
-          eq(ratesTable.currency, oldestRate.currency),
-          eq(ratesTable.created_at, dateBeforeOldestRate),
-        ),
-      )
-      .limit(1);
-
     const dataToInsertWithPrevousRates: NewRate[] = [];
 
-    scriptLogger.info("Adding previous rates");
-    dataToInsert.reduce((previousRate, currentRate) => {
-      const rateWithId = {
-        ...currentRate,
-        previous_rate: previousRate?.id ?? null,
-      };
+    const currencies = [...new Set(dataToInsert.map((rate) => rate.currency))];
 
-      dataToInsertWithPrevousRates.push(rateWithId);
-      return rateWithId;
-    }, oldestRatesPreviousRate);
+    await Promise.all(
+      currencies.map(async (currency) => {
+        const currencyDataToInsert = dataToInsert.filter(
+          (data) => data.currency === currency,
+        );
+
+        const oldestRate = currencyDataToInsert[0];
+        const dateBeforeOldestRate = getPreviousDateString(
+          oldestRate.created_at as string,
+        );
+
+        const [oldestRatesPreviousRate] = await db
+          .select()
+          .from(ratesTable)
+          .where(
+            and(
+              eq(ratesTable.currency, oldestRate.currency),
+              eq(ratesTable.created_at, dateBeforeOldestRate),
+            ),
+          )
+          .limit(1);
+
+        scriptLogger.info(`Adding previous rates for: ${currency}`);
+        currencyDataToInsert.reduce((previousRate, currentRate) => {
+          const rateWithId = {
+            ...currentRate,
+            previous_rate: previousRate?.id ?? null,
+          };
+
+          dataToInsertWithPrevousRates.push(rateWithId);
+          return rateWithId;
+        }, oldestRatesPreviousRate);
+      }),
+    );
 
     await db.insert(ratesTable).values(dataToInsertWithPrevousRates);
     scriptLogger.info(
