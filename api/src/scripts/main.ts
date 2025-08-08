@@ -14,13 +14,26 @@ function askQuestion(query: string): Promise<string> {
   return new Promise((resolve) => reader.question(query, resolve));
 }
 
+async function getChoiceFromArgsOrPrompt(): Promise<"1" | "2" | null> {
+  const args = process.argv.slice(2);
+  const firstArg = args[0]?.toLowerCase();
+
+  if (firstArg === "latest") return "1";
+  if (firstArg === "batch") return "2";
+
+  const choice = await askQuestion(
+    `Which rates do you want to retrieve? (Enter 1 or 2)\n\n` +
+      `[1] Latest rates (most recent)\n` +
+      `[2] Batch of rates (range of dates)\n\nYour choice: `,
+  );
+
+  return choice === "1" || choice === "2" ? choice : null;
+}
+
 async function run() {
   try {
-    const choice = await askQuestion(
-      `Which rates do you want to retrieve? (Enter 1 or 2)\n\n` +
-        `[1] Latest rates (most recent)\n` +
-        `[2] Batch of rates (range of dates)\n\nYour choice: `,
-    );
+    const args = process.argv.slice(2);
+    const choice = await getChoiceFromArgsOrPrompt();
 
     if (choice === "1") {
       const result = await runRateExtractionProcess();
@@ -34,13 +47,20 @@ async function run() {
         scriptLogger.error(`Failed to extract latest rate: ${result.message}`);
       }
     } else if (choice === "2") {
-      const startDateInput = await askQuestion(
-        "Enter start date (YYYY-MM-DD): ",
-      );
-      const endDateInput = await askQuestion("Enter end date (YYYY-MM-DD): ");
+      let startDate: Date;
+      let endDate: Date;
 
-      const startDate = new Date(startDateInput);
-      const endDate = new Date(endDateInput);
+      if (args.length >= 3) {
+        startDate = new Date(args[1]);
+        endDate = new Date(args[2]);
+      } else {
+        const startDateInput = await askQuestion(
+          "Enter start date (YYYY-MM-DD): ",
+        );
+        const endDateInput = await askQuestion("Enter end date (YYYY-MM-DD): ");
+        startDate = new Date(startDateInput);
+        endDate = new Date(endDateInput);
+      }
 
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         scriptLogger.error("Invalid date format. Please use YYYY-MM-DD.");
@@ -55,7 +75,7 @@ async function run() {
       const rangeInDays = getDaysBetweenDates(startDate, endDate);
       const MAX_DAYS_BEFORE_WARNING = 31;
 
-      if (rangeInDays > MAX_DAYS_BEFORE_WARNING) {
+      if (rangeInDays > MAX_DAYS_BEFORE_WARNING && args.length < 3) {
         scriptLogger.warn(
           `You are about to retrieve rates for ${rangeInDays} days. This may take time.`,
         );
