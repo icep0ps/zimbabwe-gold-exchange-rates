@@ -123,6 +123,12 @@ services:
       retries: 5
       start_period: 10s
 
+  watchtower:
+    image: containrrr/watchtower
+    profiles: ["prod"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 volumes:
   zbr-postgres-data-dev:
   zbr-postgres-data-prod:
