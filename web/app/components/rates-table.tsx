@@ -123,23 +123,28 @@ export default function RatesDataTable({ data }: Props) {
                           return null;
 
                         return (
-                          <div className="flex items-center gap-1">
-                            <div className={cn("p-1")}>
-                              {trend.isUp ? (
-                                <TrendingUp className="w-3 h-3 text-green-600" />
-                              ) : (
-                                <TrendingDown className="w-3 h-3 text-red-600" />
-                              )}
-                            </div>
-                            <span
-                              className={cn(
-                                "text-xs font-medium",
-                                trend.isUp ? "text-green-600" : "text-red-600"
-                              )}
-                            >
-                              {trend.isUp ? "+" : ""}
-                              {trend.percentageChange.toFixed(2)}%
+                          <div>
+                            <span className="flex items-center gap-1">
+                              <div className={cn("p-1")}>
+                                {trend.isUp ? (
+                                  <TrendingUp className="w-3 h-3 text-green-600" />
+                                ) : (
+                                  <TrendingDown className="w-3 h-3 text-red-600" />
+                                )}
+                              </div>
+                              <span
+                                className={cn(
+                                  "text-xs font-medium",
+                                  trend.isUp ? "text-green-600" : "text-red-600"
+                                )}
+                              >
+                                {trend.isUp ? "+" : ""}
+                                {trend.percentageChange.toFixed(2)}%
+                              </span>
                             </span>
+                            <p className="text-muted-foreground text-xs pl-3">
+                              FROM: {currency.previous_rate?.mid_rate_zwg}
+                            </p>
                           </div>
                         );
                       })()}
