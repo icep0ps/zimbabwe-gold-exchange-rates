@@ -4,6 +4,7 @@ import { seedRatesToDatabase } from "../db/seeder.js";
 import { getDaysBetweenDates, scriptLogger } from "../utils.js";
 import { runRateExtractionProcess } from "./get-latest-rate-script.js";
 import { runBatchRateExtractionProcess } from "./get-rates-script.js";
+import sendPushNotifications from "./notifications.js";
 
 const reader = readline.createInterface({
   input: process.stdin,
@@ -43,6 +44,7 @@ async function run() {
         scriptLogger.info(
           `Latest rate inserted for ${new Date().toDateString()}.\n`,
         );
+        sendPushNotifications();
       } else {
         scriptLogger.error(`Failed to extract latest rate: ${result.message}`);
       }
