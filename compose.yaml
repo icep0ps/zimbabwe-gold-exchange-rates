@@ -1,16 +1,134 @@
-services:
-  app:
-    build: .
-    container_name: zim_rates_app
-    expose:
-      - 3000
-    ports:
-      - '3000:3000'
+name: zimbabwe_gold_exchange_rates
 
-  db:
-    image: mysql
-    container_name: zim_rate_db
+services:
+  web_dev:
+    container_name: zger_web_dev
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./web/package.json
+    ports:
+      - 5173:5173
+    env_file:
+      - ./web/.env
+    profiles: ["dev"]
     environment:
-      - MYSQL_ROOT_HOST=${HOST}
-      - MYSQL_DATABASE=${DATABASE}
-      - MYSQL_ROOT_PASSWORD=${PASSWORD}
+      NODE_ENV: development
+    depends_on:
+      api_dev:
+        condition: service_healthy
+
+  api_dev:
+    container_name: zger_api_dev
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    develop:
+      watch:
+        - action: sync
+          path: ./api
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./api/package.json
+    profiles: ["dev"]
+    env_file:
+      - ./database/.env
+      - ./api/.env
+    environment:
+      NODE_ENV: development
+    depends_on:
+      database_dev:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  database_dev:
+    container_name: zger_db_dev
+    build:
+      context: ./database
+    volumes:
+      - zbr-postgres-data-dev:/var/lib/postgresql/data
+    env_file:
+      - ./database/.env
+    profiles: ["dev"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web_prod:
+    container_name: zger_web_prod
+    image: icep0ops/zger_web_prod
+    ports:
+      - 3000:3000
+    env_file:
+      - ./web/.env.production
+    profiles: ["prod"]
+    environment:
+      NODE_ENV: production
+    depends_on:
+      api_prod:
+        condition: service_healthy
+
+  api_prod:
+    container_name: zger_api_prod
+    image: icep0ops/zger_api_prod
+    expose:
+      - "3001"
+    profiles: ["prod"]
+    env_file:
+      - ./database/.env.production
+    environment:
+      NODE_ENV: production
+    depends_on:
+      database_prod:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  database_prod:
+    container_name: zger_db_prod
+    image: icep0ops/zger_db_prod
+    volumes:
+      - zbr-postgres-data-prod:/var/lib/postgresql/data
+    env_file:
+      - ./database/.env.production
+    profiles: ["prod"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  watchtower:
+    image: containrrr/watchtower
+    profiles: ["prod"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  zbr-postgres-data-dev:
+  zbr-postgres-data-prod:
