@@ -158,7 +158,7 @@ export async function getDailyRatePdfDownloadURL(
   try {
     let $: cheerio.CheerioAPI;
     if (
-      process.env.ENV === "production" ||
+      process.env.NODE_ENV === "production" ||
       process.env.NODE_ENV === "development"
     ) {
       const response: AxiosResponse<string> = await axios.get(monthPageUrl, {
@@ -302,7 +302,7 @@ export async function downloadRatesForDate(
 export function getDailyRatePdfDownloadURLFromHTML(
   $: cheerio.CheerioAPI,
   targetDay: number,
-  retriesLeft: number = 3,
+  retriesLeft: number = 4,
 ) {
   if (retriesLeft < 0) {
     return undefined;
@@ -325,7 +325,7 @@ export function getDailyRatePdfDownloadURLFromHTML(
 
   if (link) {
     if (
-      process.env.ENV === "production" ||
+      process.env.NODE_ENV === "production" ||
       process.env.NODE_ENV === "development"
     ) {
       return `${RBZ_BASE_URL}${link}`;
