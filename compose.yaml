@@ -101,6 +101,7 @@ services:
     profiles: ["prod"]
     env_file:
       - ./database/.env.production
+      - ./api/.env
     environment:
       NODE_ENV: production
     depends_on:
