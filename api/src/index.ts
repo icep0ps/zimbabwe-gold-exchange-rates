@@ -107,6 +107,6 @@ serve(
     port: process.env.NODE_ENV === "test" ? 3333 : 3001,
   },
   (info) => {
-    logger.info(`Serverssss is running on http://localhost:${info.port}`);
+    logger.info(`Server is running on http://localhost:${info.port}`);
   },
 );

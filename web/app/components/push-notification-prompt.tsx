@@ -14,7 +14,7 @@ function PushNotificationPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   const registerServiceWorker = async () => {
-    const register = await navigator.serviceWorker.register("./worker.ts", {
+    const register = await navigator.serviceWorker.register("./worker.js", {
       scope: "/",
     });
 

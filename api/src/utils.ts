@@ -46,15 +46,13 @@ export const scriptLogger = logger.child({
   service: "SCRIPT",
 });
 
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ level, message, timestamp }) => {
-          return `[${level}] [${timestamp}]: ${message}`;
-        }),
-      ),
-    }),
-  );
-}
+logger.add(
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.printf(({ level, message, timestamp }) => {
+        return `[${level}] [${timestamp}]: ${message}`;
+      }),
+    ),
+  }),
+);
