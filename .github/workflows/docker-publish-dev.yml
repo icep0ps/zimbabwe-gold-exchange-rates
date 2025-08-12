@@ -55,3 +55,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: >-
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.ref_name == 'main' && matrix.tag_prod || matrix.tag_dev }}
+          build-args: |
+            VITE_API_BASE_URL=${{ github.ref_name == 'main' && secrets.VITE_API_BASE_URL_MAIN || secrets.VITE_API_BASE_URL_DEV }}
