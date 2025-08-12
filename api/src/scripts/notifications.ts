@@ -1,5 +1,7 @@
 import { desc, eq } from "drizzle-orm";
-import webpush from "web-push";
+import webpush, {
+  type PushSubscription as WebPushSubscription,
+} from "web-push";
 import db from "../db/index.js";
 import { pushSubscriptions, rates } from "../db/schema.js";
 
@@ -23,9 +25,11 @@ export default async function sendPushNotifications() {
 
   const results = await Promise.allSettled(
     subscriptions.map(async (sub) => {
-      const subscription = {
+      const subscription: WebPushSubscription = {
         endpoint: sub.endpoint,
-        expirationTime: sub.expirationTime,
+        expirationTime: sub.expirationTime
+          ? sub.expirationTime.getTime()
+          : null,
         keys: {
           auth: sub.auth,
           p256dh: sub.p256dh,
