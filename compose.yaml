@@ -76,6 +76,9 @@ services:
   web_prod:
     container_name: zger_web_prod
     image: icep0ops/zger_web_prod
+    build:
+      context: ./web
+      dockerfile: Dockerfile.prod
     ports:
       - 3000:3000
     env_file:
@@ -90,6 +93,9 @@ services:
   api_prod:
     container_name: zger_api_prod
     image: icep0ops/zger_api_prod
+    build:
+      context: ./api
+      dockerfile: Dockerfile.prod
     expose:
       - "3001"
     profiles: ["prod"]
@@ -111,6 +117,8 @@ services:
   database_prod:
     container_name: zger_db_prod
     image: icep0ops/zger_db_prod
+    build:
+      context: ./database
     volumes:
       - zbr-postgres-data-prod:/var/lib/postgresql/data
     env_file:
