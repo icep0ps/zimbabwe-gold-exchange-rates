@@ -7,7 +7,7 @@
     "test": "env NODE_ENV=test vitest",
     "build": "tsc",
     "start": "node src/index.js",
-    "get-rates": "npx tsx ./src/scripts/main.ts",
+    "get-rates": "node -e \"process.env.NODE_ENV === 'production' ? require('child_process').execSync('node ./src/scripts/main.js', { stdio: 'inherit' }) : require('child_process').execSync('npx tsx ./src/scripts/main.ts', { stdio: 'inherit' })\"",
     "get-latest-rates": "npx tsx ./src/scripts/get-latest-rate-script.ts",
     "db:studio": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit studio",
     "db:push": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit push"
