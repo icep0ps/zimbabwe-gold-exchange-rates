@@ -219,7 +219,7 @@ export default function RatesDataTable({ data }: Props) {
                           Mid Rate
                         </div>
                         <div className="font-semibold text-sm mb-1">
-                          {Number.parseFloat(currency.mid_rate_zwg).toFixed(4)}
+                          {Number.parseFloat(currency.mid_rate_zwg).toFixed(5)}
                         </div>
                         {(() => {
                           const trend = calculateTrend(
@@ -230,14 +230,16 @@ export default function RatesDataTable({ data }: Props) {
                             return null;
 
                           return (
-                            <div className="flex items-center justify-center gap-1">
-                              <div className={cn("p-0.5")}>
-                                {trend.isUp ? (
-                                  <TrendingUp className="w-2.5 h-2.5 text-red-600 " />
-                                ) : (
-                                  <TrendingDown className="w-2.5 h-2.5 text-green-600" />
-                                )}
-                              </div>
+                            <div className="flex items-center justify-center gap-1 flex-wrap">
+                              {currency.previous_rate?.mid_rate_zwg && (
+                                <span className="text-muted-foreground text-xs">
+                                  FROM:{" "}
+                                  {Number.parseFloat(
+                                    currency.previous_rate?.mid_rate_zwg
+                                  ).toFixed(4)}
+                                </span>
+                              )}
+
                               <span
                                 className={cn(
                                   "text-xs",
@@ -246,8 +248,9 @@ export default function RatesDataTable({ data }: Props) {
                                     : "text-green-600 "
                                 )}
                               >
-                                {trend.isUp ? "+" : ""}
-                                {trend.percentageChange.toFixed(1)}%
+                                {" "}
+                                ({trend.isUp ? "+" : ""}
+                                {trend.percentageChange.toFixed(4)}% )
                               </span>
                             </div>
                           );

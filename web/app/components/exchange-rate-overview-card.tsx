@@ -163,7 +163,7 @@ export default function ExchangeRateOverviewCard({
         if (diffDays === 14) {
           return "14d";
         }
-        if (diffMonths === 1 && diffDays >= 28 && diffDays <= 31) {
+        if (diffMonths < 14) {
           return "1m";
         }
       }
