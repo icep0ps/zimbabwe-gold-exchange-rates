@@ -87,7 +87,7 @@ export default function ChartAreaLinear({
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              interval={numberOfRates > fourteenDays ? 2 : 0}
+              interval={numberOfRates >= fourteenDays ? 2 : 0}
               dataKey={timeKey}
               tickLine={false}
               axisLine={false}
