@@ -1,5 +1,3 @@
-"use client";
-
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "./ui/card";
 import {
@@ -8,7 +6,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface ChartAreaLinearProps {
   data: Array<Record<string, any>>;
@@ -21,8 +19,25 @@ export default function ChartAreaLinear({
   dataKey,
   timeKey,
 }: ChartAreaLinearProps) {
-  const numberOfRates = data.length;
-  const fourteenDays = 14;
+  const [xAxisInterval, setXAxisInterval] = useState(0);
+
+  useEffect(() => {
+    const updateInterval = () => {
+      const width = window.innerWidth;
+
+      if (width < 640) {
+        setXAxisInterval(4);
+      } else if (width < 1024) {
+        setXAxisInterval(2);
+      } else {
+        setXAxisInterval(1);
+      }
+    };
+
+    updateInterval();
+    window.addEventListener("resize", updateInterval);
+    return () => window.removeEventListener("resize", updateInterval);
+  }, []);
 
   const processedData = useMemo(() => {
     if (!Array.isArray(data)) {
@@ -33,7 +48,6 @@ export default function ChartAreaLinear({
     return data
       .map((item, index) => {
         const value = parseFloat(item[dataKey]);
-
         if (isNaN(value)) {
           console.warn(
             `ChartAreaLinear: Skipping data point at index ${index} due to invalid value for '${dataKey}':`,
@@ -58,16 +72,12 @@ export default function ChartAreaLinear({
 
   const formatXAxisDateTick = (value: string) => {
     const date = new Date(value);
-    if (isNaN(date.getTime())) {
-      return value;
-    }
+    if (isNaN(date.getTime())) return value;
     return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
   };
 
   const formatYAxisRateTick = (value: number) => {
-    if (typeof value !== "number" || isNaN(value)) {
-      return "";
-    }
+    if (typeof value !== "number" || isNaN(value)) return "";
     return value.toFixed(3);
   };
 
@@ -78,16 +88,11 @@ export default function ChartAreaLinear({
           <AreaChart
             accessibilityLayer
             data={processedData}
-            margin={{
-              top: 5,
-              right: 0,
-              left: 0,
-              bottom: 0,
-            }}
+            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              interval={numberOfRates >= fourteenDays ? 2 : 0}
+              interval={xAxisInterval}
               dataKey={timeKey}
               tickLine={false}
               axisLine={false}
@@ -110,9 +115,7 @@ export default function ChartAreaLinear({
                   indicator="line"
                   labelFormatter={(label) => {
                     const date = new Date(label);
-                    if (isNaN(date.getTime())) {
-                      return label;
-                    }
+                    if (isNaN(date.getTime())) return label;
                     return date.toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "long",
