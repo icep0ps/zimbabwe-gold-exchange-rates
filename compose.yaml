@@ -1,78 +1,6 @@
 name: zimbabwe_gold_exchange_rates
 
 services:
-  web_dev:
-    container_name: zger_web_dev
-    build:
-      context: ./web
-      dockerfile: Dockerfile.dev
-    develop:
-      watch:
-        - action: sync
-          path: ./web
-          target: /app
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./web/package.json
-    ports:
-      - 5173:5173
-    env_file:
-      - ./web/.env
-    profiles: ["dev"]
-    environment:
-      NODE_ENV: development
-    depends_on:
-      api_dev:
-        condition: service_healthy
-
-  api_dev:
-    container_name: zger_api_dev
-    build:
-      context: ./api
-      dockerfile: Dockerfile.dev
-    develop:
-      watch:
-        - action: sync
-          path: ./api
-          target: /app
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./api/package.json
-    profiles: ["dev"]
-    env_file:
-      - ./database/.env
-      - ./api/.env
-    environment:
-      NODE_ENV: development
-    depends_on:
-      database_dev:
-        condition: service_healthy
-    healthcheck:
-      test:
-        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  database_dev:
-    container_name: zger_db_dev
-    build:
-      context: ./database
-    volumes:
-      - zbr-postgres-data-dev:/var/lib/postgresql/data
-    env_file:
-      - ./database/.env
-    profiles: ["dev"]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   web_prod:
     container_name: zger_web_prod
     image: icep0ops/zger_web_prod
@@ -83,7 +11,6 @@ services:
       - "80"
     env_file:
       - ./web/.env.production
-    profiles: ["prod"]
     environment:
       NODE_ENV: production
     restart: unless-stopped
@@ -99,7 +26,6 @@ services:
       dockerfile: Dockerfile.prod
     expose:
       - "3001"
-    profiles: ["prod"]
     env_file:
       - ./database/.env.production
       - ./api/.env
@@ -126,7 +52,6 @@ services:
       - zbr-postgres-data-prod:/var/lib/postgresql/data
     env_file:
       - ./database/.env.production
-    profiles: ["prod"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
@@ -142,7 +67,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 300
     restart: unless-stopped
-    profiles: ["prod"]
 
   nginx:
     container_name: zger_nginx
@@ -157,9 +81,7 @@ services:
     depends_on:
       - web_prod
       - api_prod
-    profiles: ["prod"]
     restart: unless-stopped
 
 volumes:
-  zbr-postgres-data-dev:
   zbr-postgres-data-prod:
