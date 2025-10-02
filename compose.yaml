@@ -5,8 +5,8 @@ services:
     container_name: zger_web_prod
     image: icep0ops/zger_web_prod
     build:
-      context: .
-      dockerfile: web/Dockerfile.prod
+      context: ./web
+      dockerfile: Dockerfile.prod
     env_file:
       - ./web/.env.production
     environment:
