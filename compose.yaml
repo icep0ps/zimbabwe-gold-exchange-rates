@@ -7,8 +7,6 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile.prod
-    expose:
-      - "80"
     env_file:
       - ./web/.env.production
     environment:
@@ -19,6 +17,11 @@ services:
         condition: service_healthy
     networks:
       - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zger.rule=Host(`zimbabwegoldexchangerates.docker.localhost`)"
+      - "traefik.http.routers.zger.entrypoints=websecure"
+      - "traefik.http.routers.zger.tls=true"
 
   api_prod:
     container_name: zger_api_prod
