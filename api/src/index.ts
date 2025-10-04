@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -8,6 +9,8 @@ import { ratesRoute } from "./routes/rates.js";
 import { logger } from "./utils.js";
 
 export const app = new Hono();
+
+console.log(process.env.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY);
 
 webpush.setVapidDetails(
   "mailto:icep0ps@gmail.com",
