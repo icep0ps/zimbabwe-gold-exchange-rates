@@ -1,12 +1,17 @@
 name: zimbabwe_gold_exchange_rates
 
 services:
+  # Production Services (Now under the 'prod' profile)
   web_prod:
     container_name: zger_web_prod
+    profiles:
+      - prod
     image: icep0ops/zger_web_prod
     build:
       context: ./web
       dockerfile: Dockerfile.prod
+    expose:
+      - "3000"
     env_file:
       - ./web/.env.production
     environment:
@@ -15,8 +20,6 @@ services:
     depends_on:
       api_prod:
         condition: service_healthy
-    expose:
-      - "3000"
     networks:
       - proxy
     labels:
@@ -27,6 +30,8 @@ services:
 
   api_prod:
     container_name: zger_api_prod
+    profiles:
+      - prod
     image: icep0ops/zger_api_prod
     build:
       context: ./api
@@ -54,6 +59,8 @@ services:
 
   database_prod:
     container_name: zger_db_prod
+    profiles:
+      - prod
     image: icep0ops/zger_db_prod
     build:
       context: ./database
@@ -71,9 +78,95 @@ services:
     networks:
       - proxy
 
+  # Development Services (Profile: dev - requires explicit profile flag)
+  web_dev:
+    container_name: zger_web_dev
+    profiles:
+      - dev
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./web/.env
+    environment:
+      NODE_ENV: development
+    restart: unless-stopped
+    depends_on:
+      api_dev:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./web/package.json
+
+  api_dev:
+    container_name: zger_api_dev
+    profiles:
+      - dev
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./database/.env
+      - ./api/.env
+    environment:
+      NODE_ENV: development
+    restart: unless-stopped
+    depends_on:
+      database_dev:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "-s", "http://localhost:3001/api/v1/currencies"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # Added develop block for hot-reloading/watch functionality
+    develop:
+      watch:
+        - action: sync
+          path: ./api
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./api/package.json
+
+  database_dev:
+    container_name: zger_db_dev
+    profiles:
+      - dev
+    build:
+      context: ./database
+    volumes:
+      - zbr-postgres-data-dev:/var/lib/postgresql/data
+    env_file:
+      - ./database/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Infrastructure Tools (Profile: tools and prod)
   watchtower:
     image: containrrr/watchtower
     container_name: zger_watchtower
+    profiles:
+      - tools
+      - prod
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 300
@@ -84,18 +177,18 @@ services:
   traefik:
     image: traefik:v3.4
     container_name: traefik
+    profiles:
+      - tools
+      - prod
     restart: unless-stopped
-
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/certs:ro
       - ./dynamic:/dynamic:ro
-
     command:
       # EntryPoints
       - "--entrypoints.web.address=:80"
@@ -104,44 +197,37 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
-
       # Attach the static configuration tls.yaml file that contains the tls configuration settings
       - "--providers.file.filename=/dynamic/tls.yaml"
-
       # Providers
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=proxy"
-
       # API & Dashboard
       - "--api.dashboard=true"
       - "--api.insecure=false"
-
       # Observability
       - "--log.level=INFO"
       - "--accesslog=true"
       - "--metrics.prometheus=true"
-
     # Traefik Dynamic configuration via Docker labels
     labels:
       # Enable self‑routing
       - "traefik.enable=true"
-
       # Dashboard router
       - "traefik.http.routers.dashboard.rule=Host(`dashboard.docker.localhost`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
-
       # Basic‑auth middleware
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$s8tdYyBg$$rxZaC.e9te.5Axos8KS5U0"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
-
     networks:
       - proxy
 
 volumes:
   zbr-postgres-data-prod:
+  zbr-postgres-data-dev:
 
 networks:
   proxy:
