@@ -1,9 +1,8 @@
-import axios, { type AxiosResponse } from "axios";
+import axios, { type AxiosResponse, type AxiosRequestHeaders } from "axios";
 import * as cheerio from "cheerio";
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import fs from "fs";
-import { type IncomingMessage } from "http";
 import https, { Agent } from "https";
 import path from "path";
 import db from "../db/index.js";
@@ -21,7 +20,10 @@ const EXCHANGE_RATES_PATH: string =
   "/index.php/research/markets/exchange-rates";
 const FULL_EXCHANGE_RATES_URL: string = `${RBZ_BASE_URL}${EXCHANGE_RATES_PATH}`;
 
-// Helper to convert month name to number
+const options = {
+  timeout: 10000,
+};
+
 const monthNames: { [key: string]: number } = {
   january: 1,
   february: 2,
@@ -36,6 +38,82 @@ const monthNames: { [key: string]: number } = {
   november: 11,
   december: 12,
 };
+
+const userAgents: string[] = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+];
+
+function getRandomUserAgent(): string {
+  const randomIndex = Math.floor(Math.random() * userAgents.length);
+  return userAgents[randomIndex];
+}
+
+/**
+ * Generates a realistic, dynamic set of HTTP headers for a request.
+ * @param url The target URL to help set appropriate 'Referer' and 'Sec-Fetch-Site' headers.
+ * @returns An AxiosRequestHeaders object.
+ */
+function generateHumanHeaders(url: string): AxiosRequestHeaders {
+  const userAgent = getRandomUserAgent();
+  const languages = ["en-US,en;q=0.9", "en-GB,en;q=0.8", "fr-FR,fr;q=0.7"];
+  const acceptLanguage =
+    languages[Math.floor(Math.random() * languages.length)];
+
+  let origin: string | null = null;
+  try {
+    origin = new URL(url).origin;
+  } catch (e) {
+    scriptLogger.warn(`Invalid URL for header generation: ${url}`);
+  }
+
+  const headers = {
+    "User-Agent": userAgent,
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": acceptLanguage,
+    Connection: "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "cross-site",
+    ...(origin && { Referer: origin }),
+    Pragma: "no-cache",
+    "Cache-Control": "no-cache",
+  };
+
+  return headers as unknown as AxiosRequestHeaders;
+}
+
+async function retryAxiosRequest<T>(
+  request: () => Promise<AxiosResponse<T>>,
+  maxRetries: number = 3,
+): Promise<AxiosResponse<T>> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await request();
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        error.code === "EAI_AGAIN" &&
+        i < maxRetries - 1
+      ) {
+        const backoffTime = 1000 * 2 ** i;
+        scriptLogger.warn(
+          `DNS lookup failed (EAI_AGAIN), retrying in ${backoffTime / 1000} seconds... (Attempt ${i + 1}/${maxRetries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error("Max retries reached for network request.");
+}
 
 /**
  * Fetches the URL for a specific month's exchange rates page on the RBZ website.
@@ -75,14 +153,17 @@ export async function getMonthPageURL(
         process.env.NODE_ENV === "production" ||
         process.env.NODE_ENV === "development"
       ) {
-        const response: AxiosResponse<string> = await axios.post(
-          FULL_EXCHANGE_RATES_URL,
-          "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
-          {
-            httpsAgent: agent,
-          },
+        const response: AxiosResponse<string> = await retryAxiosRequest(() =>
+          axios.post(
+            FULL_EXCHANGE_RATES_URL,
+            "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
+            {
+              httpsAgent: agent,
+              headers: generateHumanHeaders(FULL_EXCHANGE_RATES_URL),
+              timeout: options.timeout,
+            },
+          ),
         );
-
         $ = cheerio.load(response.data);
       } else {
         const buffer = fs.readFileSync(
@@ -161,9 +242,13 @@ export async function getDailyRatePdfDownloadURL(
       process.env.NODE_ENV === "production" ||
       process.env.NODE_ENV === "development"
     ) {
-      const response: AxiosResponse<string> = await axios.get(monthPageUrl, {
-        httpsAgent: agent,
-      });
+      const response: AxiosResponse<string> = await retryAxiosRequest(() =>
+        axios.get(monthPageUrl, {
+          httpsAgent: agent,
+          headers: generateHumanHeaders(monthPageUrl),
+          timeout: options.timeout,
+        }),
+      );
 
       $ = cheerio.load(response.data);
     } else {
@@ -177,6 +262,10 @@ export async function getDailyRatePdfDownloadURL(
       $,
       targetDay,
     );
+
+    if (foundPdfUrl && !foundPdfUrl.startsWith("http")) {
+      foundPdfUrl = `${RBZ_BASE_URL}${foundPdfUrl}`;
+    }
 
     if (!foundPdfUrl) {
       throw new Error(
@@ -202,7 +291,7 @@ export async function getDailyRatePdfDownloadURL(
 }
 
 /**
- * Downloads a file from a given URL to a specified local path.
+ * Downloads a file from a given URL to a specified local path using axios.
  * @param {string} fileUrl - The URL of the file to download.
  * @param {string} outputPath - The full path including filename where the file should be saved.
  * @returns {Promise<void>} A promise that resolves when the download is complete.
@@ -216,38 +305,55 @@ export async function downloadFile(
   const outputDir: string = path.dirname(outputPath);
   await fs.promises.mkdir(outputDir, { recursive: true });
 
-  const writer: fs.WriteStream = fs.createWriteStream(outputPath);
+  try {
+    const response: AxiosResponse<any> = await retryAxiosRequest(() =>
+      axios.get(fileUrl, {
+        responseType: "stream",
+        httpsAgent: agent,
+        headers: generateHumanHeaders(fileUrl),
+        timeout: options.timeout,
+      }),
+    );
 
-  return new Promise<void>((resolve, reject) => {
-    https
-      .get(fileUrl, (response: IncomingMessage) => {
-        if (response.statusCode !== 200) {
-          reject(
-            new Error(
-              `Failed to get '${fileUrl}' (${response.statusCode} ${response.statusMessage || "Unknown Status"})`,
-            ),
-          );
-          return;
-        }
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to get '${fileUrl}' (${response.status} ${response.statusText})`,
+      );
+    }
 
-        response.pipe(writer);
+    const writer: fs.WriteStream = fs.createWriteStream(outputPath);
 
-        writer.on("finish", () => {
-          writer.close();
-          scriptLogger.info("Rates PDF download completed.");
-          resolve();
-        });
+    response.data.pipe(writer);
 
-        writer.on("error", (err: Error) => {
-          fs.unlink(outputPath, () => {});
-          reject(new Error(`File write error: ${err.message}`));
-        });
-      })
-      .on("error", (err: Error) => {
-        fs.unlink(outputPath, () => {});
-        reject(new Error(`HTTP request error: ${err.message}`));
+    return new Promise<void>((resolve, reject) => {
+      writer.on("finish", () => {
+        writer.close();
+        scriptLogger.info("Rates PDF download completed.");
+        resolve();
       });
-  });
+
+      writer.on("error", (err: Error) => {
+        fs.unlink(outputPath, () => {});
+        reject(new Error(`File write error: ${err.message}`));
+      });
+
+      response.data.on("error", (err: Error) => {
+        fs.unlink(outputPath, () => {});
+        reject(new Error(`Download stream error: ${err.message}`));
+      });
+    });
+  } catch (error: unknown) {
+    let errorMessage = "An unknown error occurred during download";
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.message;
+      if (error.response) {
+        errorMessage += ` (Status: ${error.response.status})`;
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    throw new Error(`Error downloading file: ${errorMessage}`);
+  }
 }
 
 /**
@@ -284,8 +390,19 @@ export async function downloadRatesForDate(
       fileName,
     );
 
+    if (process.env.NODE_ENV === "development" && fs.existsSync(outputPath)) {
+      fs.unlinkSync(outputPath);
+      scriptLogger.warn(
+        `Deleted existing PDF in development mode: ${outputPath}`,
+      );
+    }
+
     if (!fs.existsSync(outputPath)) {
       await downloadFile(pdfDownloadUrl, outputPath);
+    } else {
+      scriptLogger.info(
+        `Rates PDF already exists at: ${outputPath}. Skipping download.`,
+      );
     }
   } catch (error: unknown) {
     let errorMessage =
@@ -299,44 +416,46 @@ export async function downloadRatesForDate(
   }
 }
 
+/**
+ * Extracts the PDF download URL for a specific day from the RBZ exchange rates page.
+ * It retries for previous days if the target day is not found.
+ *
+ * @param {cheerio.CheerioAPI} $ - The Cheerio API instance loaded with the page HTML.
+ * @param {number} targetDay - The day of the month to find the rate for.
+ * @param {number} [retriesLeft=4] - The number of previous days to check.
+ * @returns {string | undefined} The full URL to the PDF or undefined if not found.
+ */
 export function getDailyRatePdfDownloadURLFromHTML(
   $: cheerio.CheerioAPI,
   targetDay: number,
   retriesLeft: number = 4,
-) {
-  if (retriesLeft < 0) {
+): string | undefined {
+  // Base case for recursion: if we've run out of days or retries, stop.
+  if (targetDay < 1 || retriesLeft < 0) {
     return undefined;
   }
 
-  const link = $("tbody tr")
-    .filter(function (_, el) {
-      const $row = $(el);
-      const dayCellText = $row.find("td:nth-child(1)").text().trim();
-      const pdfLinkElement = $row.find("td:nth-child(2) a[href$='.pdf']");
+  const row = $("article.item-page tr").filter(function () {
+    const dayCellText = $(this).find("td:first-child").text().trim();
 
-      if (dayCellText && pdfLinkElement.length > 0) {
-        const dayInTable = parseInt(dayCellText, 10);
-        return dayInTable === targetDay;
-      }
-      return false;
-    })
-    .find("td:nth-child(2) a[href$='.pdf']")
-    .attr("href");
+    // Ensure the cell has text before trying to parse it
+    if (dayCellText) {
+      const dayInTable = parseInt(dayCellText, 10);
+      return dayInTable === targetDay;
+    }
+    return false;
+  });
+
+  // Find the PDF link within the matched row
+  const link = row.find("td:nth-child(2) a[href$='.pdf']").attr("href");
 
   if (link) {
-    if (
-      process.env.NODE_ENV === "production" ||
-      process.env.NODE_ENV === "development"
-    ) {
-      return `${RBZ_BASE_URL}${link}`;
-    }
     return link;
   }
 
-  targetDay--;
-  retriesLeft--;
-
-  return getDailyRatePdfDownloadURLFromHTML($, targetDay, retriesLeft);
+  // If no link is found for the targetDay, recursively call the function
+  // for the previous day with one less retry.
+  return getDailyRatePdfDownloadURLFromHTML($, targetDay - 1, retriesLeft - 1);
 }
 
 /**
@@ -355,12 +474,16 @@ export async function downloadMonthyRatesHTMLPage() {
     process.env.NODE_ENV === "production" ||
     process.env.NODE_ENV === "development"
   ) {
-    const response: AxiosResponse<string> = await axios.post(
-      FULL_EXCHANGE_RATES_URL,
-      "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
-      {
-        httpsAgent: agent,
-      },
+    const response: AxiosResponse<string> = await retryAxiosRequest(() =>
+      axios.post(
+        FULL_EXCHANGE_RATES_URL,
+        "filter-search=&month=&year=&limit=0&view=archive&option=com_content&limitstart=0",
+        {
+          httpsAgent: agent,
+          headers: generateHumanHeaders(FULL_EXCHANGE_RATES_URL),
+          timeout: options.timeout,
+        },
+      ),
     );
 
     if (response.status === 200) fs.writeFileSync(outputPath, response.data);
@@ -386,7 +509,8 @@ export async function downloadMonthyRatesHTMLPage() {
         };
       }
     })
-    .toArray();
+    .toArray()
+    .filter((item) => item !== undefined) as { id: string; url: string }[];
 
   const uniqueMonths = monthLinksToInsert.filter(
     (value, index, self) => index === self.findIndex((t) => t.id === value.id),
