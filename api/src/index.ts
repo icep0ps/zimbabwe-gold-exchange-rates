@@ -10,8 +10,6 @@ import { logger } from "./utils.js";
 
 export const app = new Hono();
 
-console.log(process.env.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY);
-
 webpush.setVapidDetails(
   "mailto:icep0ps@gmail.com",
   process.env.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY as string,

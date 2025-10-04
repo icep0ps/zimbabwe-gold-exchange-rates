@@ -20,6 +20,9 @@ services:
     depends_on:
       api_prod:
         condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: 3
     networks:
       - proxy
     labels:
@@ -54,6 +57,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    deploy:
+      mode: replicated
+      replicas: 3
     networks:
       - proxy
 
@@ -169,7 +175,9 @@ services:
       - prod
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300
+    command:
+      - "--interval 30"
+      - "--rolling-restart"
     restart: unless-stopped
     networks:
       - proxy
