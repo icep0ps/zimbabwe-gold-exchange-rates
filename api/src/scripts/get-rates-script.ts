@@ -29,14 +29,14 @@ export async function runBatchRateExtractionProcess(
   before computing the difference.
 */
 
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(0, 0, 0, 0);
+  startDate.setUTCHours(0, 0, 0, 0);
+  endDate.setUTCHours(0, 0, 0, 0);
 
   const NUBER_OF_DAYS_TO_ADD = getDaysBetweenDates(startDate, endDate) + 1;
 
   for (let i = 0; i < NUBER_OF_DAYS_TO_ADD; i++) {
     const startDateCopy = new Date(startDate);
-    startDateCopy.setDate(startDate.getDate() + i);
+    startDateCopy.setUTCDate(startDate.getUTCDate() + i);
     dates.push(startDateCopy);
   }
 
