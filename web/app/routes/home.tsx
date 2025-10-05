@@ -17,19 +17,19 @@ import type {
 import type { Route } from "./+types/home";
 
 const USD_RATE_ENDPOINT = `${
-  import.meta.env.VITE_API_SERVICE_URL
+  import.meta.env.VITE_API_BASE_URL
 }api/v1/rates/current`;
 
 const ALL_RATES_ENDPOINT = `${
-  import.meta.env.VITE_API_SERVICE_URL
+  import.meta.env.VITE_API_BASE_URL
 }api/v1/rates/current`;
 
 const HISTORICAL_RATES_ENDPOINT = `${
-  import.meta.env.VITE_API_SERVICE_URL
+  import.meta.env.VITE_API_BASE_URL
 }api/v1/rates/historical/`;
 
 const ALL_CURRENCIES_NAMES = `${
-  import.meta.env.VITE_API_SERVICE_URL
+  import.meta.env.VITE_API_BASE_URL
 }api/v1/currencies`;
 
 export function meta({}: Route.MetaArgs) {
