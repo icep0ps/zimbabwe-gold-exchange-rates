@@ -1,9 +1,9 @@
+version: "3.8"
 name: zimbabwe_gold_exchange_rates
 
 services:
   # Production Services (Now under the 'prod' profile)
   web_prod:
-    container_name: zger_web_prod
     profiles:
       - prod
     image: icep0ops/zger_web_prod
@@ -32,7 +32,6 @@ services:
       - "traefik.http.routers.zger.tls=true"
 
   api_prod:
-    container_name: zger_api_prod
     profiles:
       - prod
     image: icep0ops/zger_api_prod
@@ -64,7 +63,6 @@ services:
       - proxy
 
   database_prod:
-    container_name: zger_db_prod
     profiles:
       - prod
     image: icep0ops/zger_db_prod
@@ -86,7 +84,6 @@ services:
 
   # Development Services (Profile: dev - requires explicit profile flag)
   web_dev:
-    container_name: zger_web_dev
     profiles:
       - dev
     build:
@@ -113,7 +110,6 @@ services:
           path: ./web/package.json
 
   api_dev:
-    container_name: zger_api_dev
     profiles:
       - dev
     build:
@@ -149,7 +145,6 @@ services:
           path: ./api/package.json
 
   database_dev:
-    container_name: zger_db_dev
     profiles:
       - dev
     build:
@@ -169,7 +164,6 @@ services:
   # Infrastructure Tools (Profile: tools and prod)
   watchtower:
     image: containrrr/watchtower
-    container_name: zger_watchtower
     profiles:
       - tools
       - prod
@@ -184,7 +178,6 @@ services:
 
   traefik:
     image: traefik:v3.4
-    container_name: traefik
     profiles:
       - tools
       - prod
