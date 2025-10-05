@@ -35,13 +35,16 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const subscription = formData.get("subscription");
 
-  await fetch(`${import.meta.env.VITE_API_BASE_URL}notifications/subscribe`, {
-    method: "POST",
-    body: subscription,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  await fetch(
+    `${import.meta.env.VITE_API_SERVICE_URL}notifications/subscribe`,
+    {
+      method: "POST",
+      body: subscription,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

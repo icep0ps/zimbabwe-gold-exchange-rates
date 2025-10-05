@@ -14,8 +14,6 @@ services:
       - "3000"
     env_file:
       - ./web/.env.production
-    environment:
-      NODE_ENV: production
     restart: unless-stopped
     depends_on:
       api_prod:
@@ -43,8 +41,6 @@ services:
     env_file:
       - ./database/.env.production
       - ./api/.env
-    environment:
-      NODE_ENV: production
     restart: unless-stopped
     depends_on:
       database_prod:
@@ -165,10 +161,10 @@ services:
   watchtower:
     image: containrrr/watchtower
     profiles:
-      - prod
+      - dev
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 30 --rolling-restart
+    command: --interval 3000 --rolling-restart
     restart: unless-stopped
     networks:
       - proxy
