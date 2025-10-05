@@ -33,7 +33,7 @@ function flattenExtractedRates(
           ask_rate_zwg: rateValues.ask_zwl.toString(),
           mid_rate_zwg: rateValues.mid_zwl.toString(),
           created_at: rateValues.created_at.toString(),
-          previous_rate: null, // Initialized to null, will be set later
+          previous_rate: null, // Initialized to null
         };
 
         dataToInsert.push(newRate);
@@ -69,6 +69,9 @@ export async function seedRatesToDatabase(
     const insertedRates = await db
       .insert(ratesTable)
       .values(ratesToProcess)
+      .onConflictDoNothing({
+        target: [ratesTable.currency, ratesTable.created_at],
+      })
       .returning();
 
     scriptLogger.info(
