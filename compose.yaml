@@ -1,4 +1,3 @@
-version: "3.8"
 name: zimbabwe_gold_exchange_rates
 
 services:
@@ -27,11 +26,12 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.zger.rule=Host(`zimbabwegoldexchangerates.docker.localhost`)"
+      - "traefik.http.routers.zger.rule=Host(`zimbabwegoldexchangerates.icep0ps.dev`)"
       - "traefik.http.routers.zger.entrypoints=websecure"
       - "traefik.http.routers.zger.tls=true"
       - "traefik.http.services.zger-service.loadbalancer.server.port=3000"
       - "traefik.http.routers.zger.service=zger-service"
+      - "traefik.http.routers.zger.tls.certresolver=myresolver"
 
   api_prod:
     profiles:
@@ -63,10 +63,11 @@ services:
       replicas: 3
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.zger-api.rule=Host(`zimbabwegoldexchangerates.docker.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.zger-api.rule=Host(`zimbabwegoldexchangerates.icep0ps.dev`) && PathPrefix(`/api`)"
       - "traefik.http.routers.zger-api.entrypoints=websecure"
       - "traefik.http.routers.zger-api.tls=true"
       - "traefik.http.services.zger-api-service.loadbalancer.server.port=3001"
+      - "traefik.http.routers.zger-api.tls.certresolver=myresolver"
       - "traefik.http.routers.zger-api.service=zger-api-service"
     networks:
       - proxy
@@ -194,8 +195,7 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/certs:ro
-      - ./dynamic:/dynamic:ro
+      - ./letsencrypt:/letsencrypt
     command:
       # EntryPoints
       - "--entrypoints.web.address=:80"
@@ -204,12 +204,13 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
-      # Attach the static configuration tls.yaml file that contains the tls configuration settings
-      - "--providers.file.filename=/dynamic/tls.yaml"
       # Providers
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=proxy"
+      - "--certificatesresolvers.myresolver.acme.email=icepopsdevelops@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       # API & Dashboard
       - "--api.dashboard=true"
       - "--api.insecure=false"
@@ -219,13 +220,12 @@ services:
       - "--metrics.prometheus=true"
     # Traefik Dynamic configuration via Docker labels
     labels:
-      # Enable self‑routing
       - "traefik.enable=true"
-      # Dashboard router
-      - "traefik.http.routers.dashboard.rule=Host(`dashboard.docker.localhost`)"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.zimbabwegoldexchangerates.icep0ps.dev`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
       # Basic‑auth middleware
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$s8tdYyBg$$rxZaC.e9te.5Axos8KS5U0"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
