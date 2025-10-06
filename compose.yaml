@@ -44,7 +44,6 @@ services:
       - "3001"
     env_file:
       - ./database/.env.production
-      - ./api/.env
     environment:
       NODE_ENV: production
     restart: unless-stopped
@@ -102,7 +101,7 @@ services:
     ports:
       - "5173:5173"
     env_file:
-      - ./web/.env
+      - ./web/.env.development
     environment:
       NODE_ENV: development
     restart: unless-stopped
