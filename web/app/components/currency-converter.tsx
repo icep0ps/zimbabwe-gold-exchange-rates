@@ -74,21 +74,21 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
           Exchange Rate Calculator
         </h1>
         <p className="text-muted-foreground">
-          Effortlessly convert any supported currency into ZWG (Zimbabwe Gold),
-          providing you with instant access to the value of ZWG against global
+          Effortlessly convert any supported currency into ZiG (Zimbabwe Gold),
+          providing you with instant access to the value of ZiG against global
           supported currencies.
         </p>
       </div>
       <div className="flex flex-col justify-between items-start gap-5 max-w-96 w-full">
         <CurrencyInputSection
           inputId="zig-amount-input"
-          fixedCurrencySymbol="ZWG"
+          fixedCurrencySymbol="ZiG"
           amount={primaryAmount}
           onAmountChange={handlePrimaryAmountChange}
           selectedCurrency={primaryBaseCurrency}
           onCurrencyChange={() => {}}
           allRates={allAvailableCurrencies}
-          inputPlaceholder="Enter ZWG amount"
+          inputPlaceholder="Enter ZiG amount"
         />
 
         <CurrencyInputSection

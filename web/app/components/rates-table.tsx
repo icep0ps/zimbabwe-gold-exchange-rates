@@ -72,7 +72,7 @@ export default function RatesDataTable({ data }: Props) {
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold">Currency</TableHead>
                 <TableHead className="text-center font-semibold" colSpan={3}>
-                  ZWG Rates
+                  ZiG Rates
                 </TableHead>
                 <TableHead className="text-center font-semibold" colSpan={3}>
                   Original Rates
@@ -209,7 +209,7 @@ export default function RatesDataTable({ data }: Props) {
               <CardContent className="pt-0">
                 <Tabs defaultValue="zwg" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="zwg">ZWG Rates</TabsTrigger>
+                    <TabsTrigger value="zwg">ZiG Rates</TabsTrigger>
                     <TabsTrigger value="original">Original Rates</TabsTrigger>
                   </TabsList>
                   <TabsContent value="zwg" className="space-y-3 mt-4 p-0">

@@ -63,7 +63,7 @@ export default function ChartAreaLinear({
   const chartConfig: ChartConfig = useMemo(
     () => ({
       [dataKey]: {
-        label: "Exchange Rate (ZWG)",
+        label: "Exchange Rate (ZiG)",
         color: "hsl(var(--chart-1))",
       },
     }),

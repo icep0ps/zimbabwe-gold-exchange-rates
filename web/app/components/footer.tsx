@@ -14,7 +14,7 @@ const SiteFooter: React.FC<AppFooterProps> = () => {
             Zimbabwe Gold Exchange Rates
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            An open-source platform to stay updated with real-time ZWG bank
+            An open-source platform to stay updated with real-time ZiG bank
             rates and explore seamless currency conversions.
           </p>
           <div className="flex justify-center lg:justify-start gap-3 mt-2 ">

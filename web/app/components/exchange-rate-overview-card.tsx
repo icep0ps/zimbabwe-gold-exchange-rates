@@ -186,7 +186,7 @@ export default function ExchangeRateOverviewCard({
           <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
             {currentRate.toFixed(4)}{" "}
             <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-              Zimbabwe Gold (ZWG)
+              Zimbabwe Gold (ZiG)
             </span>
           </h1>
           <h2
