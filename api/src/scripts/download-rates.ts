@@ -91,22 +91,27 @@ function generateHumanHeaders(url: string): AxiosRequestHeaders {
 
 async function retryAxiosRequest<T>(
   request: () => Promise<AxiosResponse<T>>,
-  maxRetries: number = 3,
+  maxRetries: number = 5,
 ): Promise<AxiosResponse<T>> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await request();
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        error.code === "EAI_AGAIN" &&
-        i < maxRetries - 1
-      ) {
-        const backoffTime = 1000 * 2 ** i;
-        scriptLogger.warn(
-          `DNS lookup failed (EAI_AGAIN), retrying in ${backoffTime / 1000} seconds... (Attempt ${i + 1}/${maxRetries})`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, backoffTime));
+      if (axios.isAxiosError(error) && error.code === "EAI_AGAIN") {
+        if (i < maxRetries - 1) {
+          const backoffTime = 1000 * 2 ** i + Math.random() * 1000;
+          scriptLogger.warn(
+            `DNS lookup failed (EAI_AGAIN), retrying in ${Math.round(
+              backoffTime / 1000,
+            )} seconds... (Attempt ${i + 1}/${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, backoffTime));
+        } else {
+          scriptLogger.error(
+            `DNS lookup failed after ${maxRetries} attempts.`,
+          );
+          throw error;
+        }
       } else {
         throw error;
       }
