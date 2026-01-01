@@ -31,7 +31,7 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
             href="/contact"
             className="text-primary hover:underline font-medium"
           >
-            Contact us.
+            Contact uss.
           </a>{" "}
         </p>
       </div>
