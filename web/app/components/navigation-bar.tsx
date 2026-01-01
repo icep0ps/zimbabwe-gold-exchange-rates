@@ -19,7 +19,7 @@ const navLinks = [
   { title: "Home", href: "/" },
   { title: "History", href: "/history" },
   { title: "Exchange Rates", href: "/#exchange-rates" },
-  { title: "API (Soon)", href: "#" },
+  { title: "API", href: "/docs" },
   { title: "Contact", href: "/#faq-section" },
 ];
 
