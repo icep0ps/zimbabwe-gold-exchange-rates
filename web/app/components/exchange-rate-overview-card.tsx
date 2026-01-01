@@ -45,7 +45,7 @@ function formatDate(dateString: string) {
 }
 
 interface ExchangeRateOverviewCardProps {
-  officialRate: Rate;
+  officialRate: Rate | null;
   chartRates: Rate[];
   allAvailableCurrencies: { name: string }[];
 }
@@ -56,6 +56,7 @@ export default function ExchangeRateOverviewCard({
   officialRate,
   chartRates,
   allAvailableCurrencies,
+  referenceDate,
 }: ExchangeRateOverviewCardProps) {
   const [startDateParam, setStartDate] = useQueryState("startDate", {
     shallow: false,
@@ -64,15 +65,32 @@ export default function ExchangeRateOverviewCard({
   const [targetCurrencyParam, setTargetCurrency] = useQueryState(
     "targetCurrency",
     {
-      defaultValue: officialRate.currency,
+      defaultValue: officialRate?.currency || "USD",
       shallow: false,
     }
   );
+
+  if (!officialRate) {
+    return (
+      <Card className="bg-transparent border-none shadow-none col-span-1 lg:col-span-2">
+        <CardHeader className="space-y-1 pb-2 px-0">
+          <CardTitle className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+            No Exchange Rate Data
+          </CardTitle>
+          <CardDescription className="text-base text-gray-600 dark:text-gray-400 text-left">
+             No official bank rate data is available for this date.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   const currentRateVal = Number.parseFloat(officialRate.mid_rate_zwg);
   const previousRateVal = Number.parseFloat(
     officialRate.previous_rate?.mid_rate_zwg ?? "0"
   );
+
+  console.log(officialRate);
   const rateChange = currentRateVal - previousRateVal;
 
   let ratePercentageChange;
@@ -115,35 +133,35 @@ export default function ExchangeRateOverviewCard({
   };
 
   const handleTabChange = (value: string) => {
-    const today = new Date();
+    const baseDate = referenceDate ? new Date(referenceDate) : new Date();
     let calculatedStartDate: Date;
 
     switch (value) {
       case "7d":
-        calculatedStartDate = subDays(today, 7);
+        calculatedStartDate = subDays(baseDate, 7);
         break;
       case "14d":
-        calculatedStartDate = subDays(today, 14);
+        calculatedStartDate = subDays(baseDate, 14);
         break;
       case "1m":
-        calculatedStartDate = subMonths(today, 1);
+        calculatedStartDate = subMonths(baseDate, 1);
         break;
       default:
-        calculatedStartDate = subDays(today, 7);
+        calculatedStartDate = subDays(baseDate, 7);
         break;
     }
-    const calculatedEndDate = new Date();
+    const calculatedEndDate = baseDate;
 
     setStartDate(formatIsoDate(calculatedStartDate));
     setEndDate(formatIsoDate(calculatedEndDate));
   };
 
   const defaultTabValue = useMemo(() => {
-    const today = new Date();
+    const baseDate = referenceDate ? new Date(referenceDate) : new Date();
     const normalizedToday = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
+      baseDate.getFullYear(),
+      baseDate.getMonth(),
+      baseDate.getDate()
     );
 
     if (startDateParam && endDateParam) {

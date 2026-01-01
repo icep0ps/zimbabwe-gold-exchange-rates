@@ -6,7 +6,7 @@ import { calculateExchange } from "~/lib/utils";
 import CurrencyInputSection from "./currency-converter-inputs";
 
 interface CurrencyConverterProps {
-  primaryBaseCurrency: Rate;
+  primaryBaseCurrency: Rate | null;
   allAvailableCurrencies: Rate[];
 }
 
@@ -14,6 +14,9 @@ const CurrencyConverter: FC<CurrencyConverterProps> = ({
   primaryBaseCurrency,
   allAvailableCurrencies,
 }) => {
+  if (!primaryBaseCurrency) {
+    return null;
+  }
   const [secondarySelectedCurrency, setSecondarySelectedCurrency] =
     useState<Rate>(() => {
       return (

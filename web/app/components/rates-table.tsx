@@ -1,5 +1,10 @@
-import { CalendarIcon, TrendingDown, TrendingUp } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarIcon, TrendingDown, TrendingUp, X } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { cn } from "~/lib/utils";
+import { Button } from "./ui/button";
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import {
   TableHeader,
@@ -16,9 +21,16 @@ import type { Rate } from "~/lib/types";
 
 interface Props {
   data: Rate[];
+  enableDateSelection?: boolean;
+  hideHeader?: boolean;
 }
 
-export default function RatesDataTable({ data }: Props) {
+export default function RatesDataTable({
+  data,
+  enableDateSelection = false,
+  hideHeader = false,
+}: Props) {
+  const [date, setDate] = useQueryState("date");
   const sortedData = [...data].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -40,29 +52,99 @@ export default function RatesDataTable({ data }: Props) {
     };
   };
 
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      // Adjust for timezone offset to avoid "previous day" issue when formatting
+      const offset = selectedDate.getTimezoneOffset();
+      const adjustedDate = new Date(
+        selectedDate.getTime() - offset * 60 * 1000
+      );
+      setDate(adjustedDate.toISOString().split("T")[0]);
+    } else {
+      setDate(null);
+    }
+  };
+
+  const displayDate = date
+    ? (() => {
+        const [y, m, d] = date.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      })()
+    : undefined;
+
   return (
     <div className="space-y-6">
-      <div className="space-y-2 scroll-mt-20" id="exchange-rates">
-        <h2 className="text-3xl font-bold text-primary text-center sm:text-left">
-          All Exchange Rates
-        </h2>
-        <p className="text-base text-muted-foreground text-center sm:text-left leading-relaxed">
-          Our tables are meticulously updated with the latest information posted
-          by the Reserve Bank of Zimbabwe, ensuring you have access to reliable
-          and up-to-date data.
-        </p>
-        <div className="flex items-center gap-2 justify-center sm:justify-start">
-          <Badge variant="outline" className="text-xs">
-            {sortedData.length} currencies
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            Last updated:{" "}
-            {sortedData[0]
-              ? new Date(sortedData[0].created_at).toLocaleDateString("en-GB")
-              : "N/A"}
-          </Badge>
+      {!hideHeader && (
+        <div className="space-y-2 scroll-mt-20" id="exchange-rates">
+          <h2 className="text-3xl font-bold text-primary text-center sm:text-left">
+            {enableDateSelection
+              ? "Historical Exchange Rates"
+              : "All Exchange Rates"}
+          </h2>
+          <p className="text-base text-muted-foreground text-center sm:text-left leading-relaxed">
+            {enableDateSelection
+              ? "Browse exchange rates for specific dates using the calendar below."
+              : "Our tables are meticulously updated with the latest information posted by the Reserve Bank of Zimbabwe, ensuring you have access to reliable and up-to-date data."}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+            {enableDateSelection && (
+              <>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {displayDate ? (
+                        format(displayDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={displayDate}
+                      onSelect={handleDateSelect}
+                      initialFocus
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      fromYear={2024}
+                      toYear={new Date().getFullYear()}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {date && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDate(null)}
+                    title="Clear date"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
+
+            <Badge variant="outline" className="text-xs h-9">
+              {sortedData.length} currencies
+            </Badge>
+            <Badge variant="outline" className="text-xs h-9">
+              Last updated:{" "}
+              {sortedData[0]
+                ? new Date(sortedData[0].created_at).toLocaleDateString("en-GB")
+                : "N/A"}
+            </Badge>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desktop Table View */}
       <div className="hidden md:block">
