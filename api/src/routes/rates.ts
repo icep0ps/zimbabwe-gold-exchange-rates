@@ -1,8 +1,10 @@
 import { Hono } from "hono";
-import { currentRoute } from "./current.js";
+import { latestRoute } from "./latest.js";
+import { dateRoute } from "./date.js";
 import { histroricalRoute } from "./historical.js";
 
 export const ratesRoute = new Hono();
 
-ratesRoute.route("/current", currentRoute);
+ratesRoute.route("/latest", latestRoute);
+ratesRoute.route("/", dateRoute); // Mounts /:date
 ratesRoute.route("/historical", histroricalRoute);

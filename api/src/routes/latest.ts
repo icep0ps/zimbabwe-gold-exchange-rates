@@ -5,9 +5,9 @@ import db from "../db/index.js";
 import { rates } from "../db/schema.js";
 import { formatDate } from "../utils.js";
 
-export const currentRoute = new Hono();
+export const latestRoute = new Hono();
 
-currentRoute.get("/", async (c) => {
+latestRoute.get("/", async (c) => {
   const previousRate = alias(rates, "previous_rate");
   const { targetCurrency } = c.req.query();
   const upperTargetCurrency = targetCurrency
