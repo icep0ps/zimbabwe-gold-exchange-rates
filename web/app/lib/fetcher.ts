@@ -22,7 +22,7 @@ export async function getItems<T, U>(
       },
     });
 
-    return handleFetchResponse<ApiResponse<U>>(response);
+    return await handleFetchResponse<ApiResponse<U>>(response);
   } catch (error) {
     return errorHandler(error);
   }

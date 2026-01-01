@@ -32,10 +32,11 @@ export interface ApiErrorResponse {
 }
 
 interface SuccessRatesResponse {
-  officialRate: Rate;
+  officialRate: Rate | null;
   rates: Rate[];
   currencies: Currency[];
   chartRates: Rate[];
+  jsonLd?: any; // Add jsonLd since it's used in HomePage
 }
 
 interface ErrorRatesResponse {
