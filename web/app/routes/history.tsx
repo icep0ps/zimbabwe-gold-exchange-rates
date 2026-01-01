@@ -142,6 +142,31 @@ export async function loader({
 
     const officialRate = (usdRateResponse as ApiSuccessResponse<Rate[]>).data[0];
 
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Historical Zimbabwe Gold Exchange Rates",
+      description:
+        "Archive of historical exchange rates for Zimbabwe Gold (ZiG) against major currencies.",
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://zimbabwegoldexchangerates.icep0ps.dev/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "History",
+            item: "https://zimbabwegoldexchangerates.icep0ps.dev/history",
+          },
+        ],
+      },
+    };
+
     return {
       rates: (currentRatesResponse as ApiSuccessResponse<Rate[]>).data,
       chartRates: (chartRatesResponse as ApiSuccessResponse<Rate[]>).data,
@@ -149,6 +174,7 @@ export async function loader({
       currencies: (allCurrenciesResponse as ApiSuccessResponse<Currency[]>)
         .data,
       referenceDate: date || undefined,
+      jsonLd,
     };
   } catch (error) {
     console.error("Loader Error: An unexpected error occurred:", error);
@@ -166,6 +192,8 @@ function HistoryPageHeader({
   rates: Rate[];
   referenceDate?: string;
 }) {
+  const [, setDate] = useQueryState("date");
+
   const handleExport = () => {
     if (!rates.length) return;
 
@@ -245,10 +273,16 @@ export default function HistoryPage({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { rates, referenceDate } = loaderData;
+  const { rates, referenceDate, jsonLd } = loaderData;
 
   return (
     <div className="space-y-10 pb-10 pt-10">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <section className="space-y-2">
         <HistoryPageHeader rates={rates} referenceDate={referenceDate} />
       </section>
