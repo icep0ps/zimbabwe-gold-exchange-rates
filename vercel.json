@@ -3,16 +3,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "api/src/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/web/build/client/$1"
+      "destination": "/api/src/index.ts"
     }
   ],
   "functions": {
     "api/src/index.ts": {
-      "runtime": "nodejs20.x",
       "memory": 1024,
       "maxDuration": 10
     }
