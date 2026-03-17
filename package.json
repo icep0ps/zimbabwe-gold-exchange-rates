@@ -2,7 +2,7 @@
   "name": "zimbabwe-bank-rates-monorepo",
   "private": true,
   "workspaces": [
-    "api",
+    "server",
     "web"
   ],
   "scripts": {
