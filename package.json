@@ -1,0 +1,11 @@
+{
+  "name": "zimbabwe-bank-rates-monorepo",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "engines": {
+    "node": "20.x"
+  }
+}

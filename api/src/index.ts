@@ -2,6 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { handle } from "hono/vercel";
 import webpush from "web-push";
 import { currenciesRoute } from "./routes/currencies.js";
 import { notifactionsRoute } from "./routes/notifications.js";
@@ -102,12 +103,20 @@ app.route("/api/v1/rates", ratesRoute);
 app.route("/api/v1/currencies", currenciesRoute);
 app.route("/notifications", notifactionsRoute);
 
-serve(
-  {
-    fetch: app.fetch,
-    port: process.env.NODE_ENV === "test" ? 3333 : 3001,
-  },
-  (info) => {
-    logger.info(`Server is running on http://localhost:${info.port}`);
-  },
-);
+if (process.env.NODE_ENV !== "production") {
+  serve(
+    {
+      fetch: app.fetch,
+      port: process.env.NODE_ENV === "test" ? 3333 : 3001,
+    },
+    (info) => {
+      logger.info(`Server is running on http://localhost:${info.port}`);
+    },
+  );
+}
+
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const DELETE = handle(app);
+export const PATCH = handle(app);

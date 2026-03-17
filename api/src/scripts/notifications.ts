@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { desc, eq } from "drizzle-orm";
 import webpush, {
   type PushSubscription as WebPushSubscription,
@@ -5,9 +6,16 @@ import webpush, {
 import db from "../db/index.js";
 import { pushSubscriptions, rates } from "../db/schema.js";
 
+webpush.setVapidDetails(
+  "mailto:icep0ps@gmail.com",
+  process.env.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY as string,
+  process.env.PRIVATE_PUSH_NOTIFICATION_VAPID_KEY as string,
+);
+
 export default async function sendPushNotifications() {
   const latestUsdRate = await db.query.rates.findFirst({
-    where: eq(rates.currency, "USD"),
+...
+
     orderBy: [desc(rates.created_at)],
   });
 
