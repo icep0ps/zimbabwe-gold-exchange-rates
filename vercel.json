@@ -4,6 +4,10 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/web/build/client/$1"
     }
   ],
   "functions": {
