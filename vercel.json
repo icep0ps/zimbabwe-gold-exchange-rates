@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "api/src/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/web/build/client/$1"
+    }
+  ],
+  "functions": {
+    "api/src/index.ts": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}

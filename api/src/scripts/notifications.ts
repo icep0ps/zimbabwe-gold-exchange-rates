@@ -14,8 +14,7 @@ webpush.setVapidDetails(
 
 export default async function sendPushNotifications() {
   const latestUsdRate = await db.query.rates.findFirst({
-...
-
+    where: eq(rates.currency, "USD"),
     orderBy: [desc(rates.created_at)],
   });
 
