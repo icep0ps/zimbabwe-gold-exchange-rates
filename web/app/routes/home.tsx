@@ -6,7 +6,6 @@ import ExchangeRateOverviewCard from "~/components/exchange-rate-overview-card";
 import FrequentlyAskedQuestions from "~/components/faq-section";
 import RatesDataTable from "~/components/rates-table";
 import { getItems } from "~/lib/fetcher";
-import { logger } from "~/lib/logger.server";
 import type {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -57,36 +56,6 @@ export function meta({ data }: Route.MetaArgs) {
     { name: "twitter:image", content: image },
   ];
 }
-
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
-  async ({ request, context }, next) => {
-    const requestId = crypto.randomUUID();
-
-    const start = performance.now();
-    const response = await next();
-    const duration = performance.now() - start;
-
-    const log = {
-      method: request.method,
-      path: request.url,
-      request: {
-        headers: request.headers,
-      },
-      response: {
-        headers: response.headers,
-        status: response.status,
-        body: response.body,
-      },
-      duration,
-    };
-
-    logger.info(
-      `[${requestId}] Response ${response.status} (${duration}ms)`,
-      log
-    );
-    return response;
-  },
-];
 
 export async function loader({
   request,
