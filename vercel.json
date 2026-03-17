@@ -7,7 +7,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/web/build/client/$1"
+      "destination": "/index.html"
     }
   ],
   "functions": {
