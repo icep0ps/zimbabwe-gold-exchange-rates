@@ -16,15 +16,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: api/package-lock.json
 
       - name: Install dependencies
         run: npm install
-        working-directory: server
+        working-directory: api
 
       - name: Run Scraper
         run: npm run get-rates latest
-        working-directory: server
+        working-directory: api
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NODE_ENV: production

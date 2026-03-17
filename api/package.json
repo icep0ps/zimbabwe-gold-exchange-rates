@@ -3,11 +3,11 @@
   "type": "module",
   "scripts": {
     "start:entrypoint": "tsx ./entrypoint.ts",
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch _src/index.ts",
     "test": "env NODE_ENV=test vitest",
     "build": "tsc --noCheck",
-    "start": "node src/index.js",
-    "get-rates": "node -e \"process.env.NODE_ENV === 'production' ? require('child_process').execSync('node ./src/scripts/main.js ' + (process.argv.slice(1).join(' ')), { stdio: 'inherit' }) : require('child_process').execSync('npx tsx ./src/scripts/main.ts ' + (process.argv.slice(1).join(' ')), { stdio: 'inherit' })\"",
+    "start": "node _src/index.js",
+    "get-rates": "node -e \"process.env.NODE_ENV === 'production' ? require('child_process').execSync('node ./_src/scripts/main.js ' + (process.argv.slice(1).join(' ')), { stdio: 'inherit' }) : require('child_process').execSync('npx tsx ./_src/scripts/main.ts ' + (process.argv.slice(1).join(' ')), { stdio: 'inherit' })\"",
     "db:studio": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit studio",
     "db:push": "NODE_TLS_REJECT_UNAUTHORIZED='0' npx drizzle-kit push"
   },
