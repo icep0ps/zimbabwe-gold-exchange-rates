@@ -8,5 +8,16 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    fs: {
+      allow: ["app", "public", "node_modules"],
+    },
+  },
+  optimizeDeps: {
+    exclude: ["hono"],
+  },
+  build: {
+    rollupOptions: {
+      external: (id) => id.includes("/src/") || id.includes("/api/"),
+    },
   },
 });

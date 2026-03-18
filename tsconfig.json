@@ -14,7 +14,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
+    "jsxImportSource": "react",
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {

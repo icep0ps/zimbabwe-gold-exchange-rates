@@ -50,10 +50,10 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({
+export async function clientLoader({
   request,
   context,
-}: Route.LoaderArgs): Promise<RatesResponse & { referenceDate?: string }> {
+}: Route.ClientLoaderArgs): Promise<RatesResponse & { referenceDate?: string }> {
   try {
     const url = new URL(request.url);
     const dateFourteenDaysAgo = format(subDays(new Date(), 14), "yyyy-MM-dd");

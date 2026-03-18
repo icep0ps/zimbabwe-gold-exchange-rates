@@ -1,3 +1,4 @@
+/** @jsxImportSource hono/jsx */
 import { Hono } from "hono";
 import db from "../db/index.js";
 import { rates } from "../db/schema.js";

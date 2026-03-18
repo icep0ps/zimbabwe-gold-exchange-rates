@@ -1,3 +1,4 @@
+/** @jsxImportSource hono/jsx */
 import { Hono } from "hono";
 import { latestRoute } from "./latest.js";
 import { dateRoute } from "./date.js";

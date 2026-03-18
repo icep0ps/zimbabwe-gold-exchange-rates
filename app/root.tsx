@@ -31,7 +31,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export async function action({ request }: Route.ActionArgs) {
+export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const subscription = formData.get("subscription");
 
@@ -75,6 +75,16 @@ export default function App() {
         <PushNotificationPrompt />
       </main>
     </NuqsAdapter>
+  );
+}
+
+export function HydrateFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="animate-pulse text-primary font-bold text-2xl">
+        Loading Zimbabwe Bank Rates...
+      </div>
+    </div>
   );
 }
 

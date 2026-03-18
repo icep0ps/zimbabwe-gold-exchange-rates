@@ -5,4 +5,5 @@ export default {
     unstable_middleware: true,
   },
   ssr: false,
+  prerender: [],
 } satisfies Config;
