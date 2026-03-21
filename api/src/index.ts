@@ -102,12 +102,14 @@ app.route("/api/v1/rates", ratesRoute);
 app.route("/api/v1/currencies", currenciesRoute);
 app.route("/notifications", notifactionsRoute);
 
-serve(
-  {
-    fetch: app.fetch,
-    port: process.env.NODE_ENV === "test" ? 3333 : 3001,
-  },
-  (info) => {
-    logger.info(`Server is running on http://localhost:${info.port}`);
-  },
-);
+if (!process.env.VERCEL) {
+  serve(
+    {
+      fetch: app.fetch,
+      port: process.env.NODE_ENV === "test" ? 3333 : 3001,
+    },
+    (info) => {
+      logger.info(`Server is running on http://localhost:${info.port}`);
+    },
+  );
+}
