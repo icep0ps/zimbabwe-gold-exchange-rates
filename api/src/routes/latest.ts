@@ -3,7 +3,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { Hono } from "hono";
 import db from "../db/index.js";
 import { rates } from "../db/schema.js";
-import { formatDate } from "../utils.js";
+import { formatDate } from "../date-utils.js";
 
 export const latestRoute = new Hono();
 
