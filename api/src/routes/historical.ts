@@ -4,9 +4,9 @@ import { Hono } from "hono";
 import db from "../db/index.js";
 import { rates } from "../db/schema.js";
 
-export const histroricalRoute = new Hono();
+export const historicalRoute = new Hono();
 
-histroricalRoute.get("/:targetCurrency", async (c) => {
+historicalRoute.get("/:targetCurrency", async (c) => {
   const previousRate = alias(rates, "previous_rate");
   const targetCurrency = c.req.param("targetCurrency").toUpperCase();
   const { startDate, endDate } = c.req.query();

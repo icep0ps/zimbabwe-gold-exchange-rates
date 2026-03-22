@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import db from "../db/index.js";
 import { pushSubscriptions } from "../db/schema.js";
 
-export const notifactionsRoute = new Hono();
+export const notificationsRoute = new Hono();
 
-notifactionsRoute.post("/subscribe", async (c) => {
+notificationsRoute.post("/subscribe", async (c) => {
   const sub = await c.req.json();
 
   await db.insert(pushSubscriptions).values({
@@ -15,5 +15,5 @@ notifactionsRoute.post("/subscribe", async (c) => {
   });
 
   c.status(201);
-  return c.text("Successfully Subscribed to notifactions");
+  return c.text("Successfully Subscribed to notifications");
 });

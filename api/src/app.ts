@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { currenciesRoute } from "./routes/currencies.js";
-import { notifactionsRoute } from "./routes/notifications.js";
+import { notificationsRoute } from "./routes/notifications.js";
 import { ratesRoute } from "./routes/rates.js";
 
 export const app = new Hono();
@@ -46,4 +46,4 @@ app.get("/", (c) =>
 
 app.route("/api/v1/rates", ratesRoute);
 app.route("/api/v1/currencies", currenciesRoute);
-app.route("/notifications", notifactionsRoute);
+app.route("/notifications", notificationsRoute);
