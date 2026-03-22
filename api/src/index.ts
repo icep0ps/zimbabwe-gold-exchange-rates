@@ -2,19 +2,12 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import webpush from "web-push";
 import { currenciesRoute } from "./routes/currencies.js";
 import { notifactionsRoute } from "./routes/notifications.js";
 import { ratesRoute } from "./routes/rates.js";
 import { logger } from "./utils.js";
 
 export const app = new Hono();
-
-webpush.setVapidDetails(
-  "mailto:icep0ps@gmail.com",
-  process.env.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY as string,
-  process.env.PRIVATE_PUSH_NOTIFICATION_VAPID_KEY as string,
-);
 
 app.use(async (c, next) => {
   const start = performance.now();
