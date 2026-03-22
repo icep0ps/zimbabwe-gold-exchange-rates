@@ -47,6 +47,7 @@ async function handleLatestRate() {
     sendPushNotifications();
   } else {
     scriptLogger.error(`Failed to extract latest rate: ${result.message}`);
+    process.exit(1);
   }
 }
 
