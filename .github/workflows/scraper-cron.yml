@@ -1,0 +1,33 @@
+name: Scrape RBZ Exchange Rates
+
+on:
+  schedule:
+    # 08:00 UTC = 10:00 CAT (Zimbabwe is UTC+2), Monday–Friday
+    - cron: '0 8 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    name: Fetch and seed latest rates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Chrome
+        run: sudo apt-get update && sudo apt-get install -y google-chrome-stable
+
+      - name: Install API dependencies
+        run: npm ci
+        working-directory: api
+
+      - name: Run rate scraper
+        run: npx tsx src/scripts/main.ts latest
+        working-directory: api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PUBLIC_PUSH_NOTIFICATION_VAPID_KEY: ${{ secrets.PUBLIC_PUSH_NOTIFICATION_VAPID_KEY }}
+          PRIVATE_PUSH_NOTIFICATION_VAPID_KEY: ${{ secrets.PRIVATE_PUSH_NOTIFICATION_VAPID_KEY }}

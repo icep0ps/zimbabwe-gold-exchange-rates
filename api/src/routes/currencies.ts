@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import db from "../db/index.js";
 import { rates } from "../db/schema.js";
-import { logger } from "../utils.js";
 
 export const currenciesRoute = new Hono();
 
@@ -20,7 +19,7 @@ currenciesRoute.get("/", async (c) => {
       200,
     );
   } catch (error) {
-    logger.error("Error fetching current rates:", error);
+    console.error("Error fetching current rates:", error);
     return c.json(
       {
         success: false,

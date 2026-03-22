@@ -1,0 +1,13 @@
+{
+  "name": "zimbabwe-bank-rates",
+  "private": true,
+  "workspaces": ["api", "web"],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "packageManager": "npm@10.9.2"
+}

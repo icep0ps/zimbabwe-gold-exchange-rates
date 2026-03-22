@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**", "build/**", ".react-router/**"],
+      "env": [
+        "DATABASE_URL",
+        "PUBLIC_PUSH_NOTIFICATION_VAPID_KEY",
+        "PRIVATE_PUSH_NOTIFICATION_VAPID_KEY",
+        "VITE_API_BASE_URL"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
