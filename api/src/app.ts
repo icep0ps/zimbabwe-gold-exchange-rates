@@ -39,6 +39,11 @@ app.onError((err, c) => {
 });
 
 app.use(cors());
+
+app.get("/", (c) =>
+  c.redirect("https://zimbabwegoldexchangerates.icep0ps.dev/docs"),
+);
+
 app.route("/api/v1/rates", ratesRoute);
 app.route("/api/v1/currencies", currenciesRoute);
 app.route("/notifications", notifactionsRoute);
