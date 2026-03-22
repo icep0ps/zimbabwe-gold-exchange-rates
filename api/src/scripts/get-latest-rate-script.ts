@@ -19,12 +19,6 @@ interface FailedExtractionResponse {
 
 type ExtractionResponse = SuccessExtractionResponse | FailedExtractionResponse;
 
-const SCRIPT_DATE =
-  process.env.NODE_ENV === "development" ||
-  process.env.NODE_ENV === "production"
-    ? new Date()
-    : new Date(2024, 11, 15);
-
 /**
  * Orchestrates the entire process of downloading the exchange rates PDF for a specific date
  * and then extracting and seeding the rates into the database.
@@ -35,11 +29,9 @@ const SCRIPT_DATE =
  */
 
 export async function runRateExtractionProcess(
-  targetDate: Date = SCRIPT_DATE,
+  targetDate: Date = new Date(),
   timeout: number = 20_000,
 ): Promise<ExtractionResponse> {
-  scriptLogger.warn(`Script running in ${process.env.NODE_ENV} mode`);
-
   const timeoutFn = setTimeout(() => {
     throw new Error(
       `Script timed out trying to get rates from date ${targetDate}`,

@@ -32,23 +32,43 @@ async function main() {
   }
 }
 
+const MAX_FALLBACK_DAYS = 3;
+
 /**
- * Fetches and seeds the most recent rate.
+ * Fetches and seeds the most recent rate, falling back up to 3 previous days
+ * when no rates are found (e.g. weekends/holidays when RBZ doesn't publish).
  */
 async function handleLatestRate() {
   scriptLogger.info("Fetching the latest rate...");
-  const result = await runRateExtractionProcess();
 
-  if ("data" in result) {
-    await seedRatesToDatabase(db, [result]);
-    scriptLogger.info(
-      `Latest rate inserted for ${new Date().toDateString()}.\n`,
-    );
-    sendPushNotifications();
-  } else {
-    scriptLogger.error(`Failed to extract latest rate: ${result.message}`);
-    process.exit(1);
+  for (let daysBack = 0; daysBack <= MAX_FALLBACK_DAYS; daysBack++) {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysBack);
+
+    if (daysBack > 0) {
+      scriptLogger.warn(
+        `No rates found for today. Trying ${daysBack} day(s) back (${targetDate.toDateString()})...`,
+      );
+    }
+
+    const result = await runRateExtractionProcess(targetDate);
+
+    if (result.success) {
+      await seedRatesToDatabase(db, [result]);
+      scriptLogger.info(
+        `Latest rate inserted for ${targetDate.toDateString()}.\n`,
+      );
+      sendPushNotifications();
+      return;
+    }
+
+    scriptLogger.warn(`Attempt failed: ${result.message}`);
   }
+
+  scriptLogger.error(
+    `Failed to extract rates after trying today and ${MAX_FALLBACK_DAYS} previous day(s). Giving up.`,
+  );
+  process.exit(1);
 }
 
 /**
