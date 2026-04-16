@@ -178,6 +178,37 @@ export async function loader({
       },
     };
 
+    const faqJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Where does Zimbabwe Gold Exchange Rates get its data?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "The exchange rate data is sourced directly from the Reserve Bank of Zimbabwe (RBZ). The values represent the daily average of the Bid and Ask rates published at rbz.co.zw.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How often are the ZiG exchange rates updated?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "The data is updated daily, typically around 9–10 AM CAT (Central African Time), following the Reserve Bank of Zimbabwe's daily publication.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What currencies are supported?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "We support all currencies published by the Reserve Bank of Zimbabwe, including USD, EUR, GBP, ZAR, CAD, and more.",
+          },
+        },
+      ],
+    };
+
     return {
       rates: (currentRatesResponse as ApiSuccessResponse<Rate[]>).data,
       chartRates: (chartRatesResponse as ApiSuccessResponse<Rate[]>).data,
@@ -185,6 +216,7 @@ export async function loader({
       currencies: (allCurrenciesResponse as ApiSuccessResponse<Currency[]>)
         .data,
       jsonLd,
+      faqJsonLd,
     };
   } catch (error) {
     console.error("Loader Error: An unexpected error occurred:", error);
@@ -211,14 +243,20 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { officialRate, rates, chartRates, currencies, jsonLd } = loaderData;
+  const { officialRate, rates, chartRates, currencies, jsonLd, faqJsonLd } = loaderData;
 
   return (
     <React.Fragment>
-       {jsonLd && (
+      {jsonLd && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-10">

@@ -4,13 +4,31 @@ import { Badge } from "~/components/ui/badge";
 import type { Route } from "./+types/docs";
 
 export function meta({}: Route.MetaArgs) {
+  const title = "API Documentation | Zimbabwe Bank Rates";
+  const description =
+    "Official API documentation for integrating Zimbabwe Gold (ZiG) exchange rates into your applications.";
+  const url = "https://zimbabwegoldexchangerates.icep0ps.dev/docs";
+  const image = "https://zimbabwegoldexchangerates.icep0ps.dev/og-image.png";
+
   return [
-    { title: "API Documentation | Zimbabwe Bank Rates" },
-    {
-      name: "description",
-      content:
-        "Official API documentation for integrating Zimbabwe Gold (ZiG) exchange rates into your applications.",
-    },
+    { title },
+    { name: "description", content: description },
+    { name: "robots", content: "index, follow" },
+    { tagName: "link", rel: "canonical", href: url },
+
+    // Open Graph
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: url },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: image },
+
+    // Twitter
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:url", content: url },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
   ];
 }
 

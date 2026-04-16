@@ -47,6 +47,36 @@ export async function action({ request }: Route.ActionArgs) {
   );
 }
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://zimbabwegoldexchangerates.icep0ps.dev/#website",
+      url: "https://zimbabwegoldexchangerates.icep0ps.dev/",
+      name: "Zimbabwe Gold Exchange Rates",
+      description:
+        "Track the latest official Zimbabwe Gold (ZiG) exchange rates against USD, EUR, GBP, and ZAR. Daily updates from the Reserve Bank of Zimbabwe.",
+      inLanguage: "en",
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://zimbabwegoldexchangerates.icep0ps.dev/#organization",
+      name: "Zimbabwe Gold Exchange Rates",
+      url: "https://zimbabwegoldexchangerates.icep0ps.dev/",
+    },
+    {
+      "@type": "SiteNavigationElement",
+      name: ["Home", "Historical Rates", "API Docs"],
+      url: [
+        "https://zimbabwegoldexchangerates.icep0ps.dev/",
+        "https://zimbabwegoldexchangerates.icep0ps.dev/history",
+        "https://zimbabwegoldexchangerates.icep0ps.dev/docs",
+      ],
+    },
+  ],
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
@@ -55,6 +85,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
       </head>
       <body className="bg-background">
         {children}

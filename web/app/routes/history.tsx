@@ -29,10 +29,16 @@ export function meta({ data }: Route.MetaArgs) {
   const description =
     "Browse historical exchange rates for Zimbabwe Gold (ZiG) against major currencies like USD, EUR, GBP, and ZAR. Analyze past trends and data.";
   const url = "https://zimbabwegoldexchangerates.icep0ps.dev/history";
+  const image = "https://zimbabwegoldexchangerates.icep0ps.dev/og-image.png";
 
   return [
     { title },
     { name: "description", content: description },
+    {
+      name: "keywords",
+      content:
+        "Zimbabwe Gold historical rates, ZiG exchange rate history, RBZ historical data, Zimbabwe currency archive",
+    },
     { name: "robots", content: "index, follow" },
     { tagName: "link", rel: "canonical", href: url },
 
@@ -41,12 +47,14 @@ export function meta({ data }: Route.MetaArgs) {
     { property: "og:url", content: url },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
+    { property: "og:image", content: image },
 
     // Twitter
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:url", content: url },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
   ];
 }
 

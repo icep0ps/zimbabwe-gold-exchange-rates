@@ -28,10 +28,12 @@ const FrequentlyAskedQuestions: React.FC<FaqSectionProps> = ({
           Quick answers to questions you might have. Can't find what you are
           looking for?{" "}
           <a
-            href="/contact"
+            href="https://github.com/icep0ps/zimbabwe-bank-rates/issues"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-primary hover:underline font-medium"
           >
-            Contact uss.
+            Open an issue on GitHub.
           </a>{" "}
         </p>
       </div>
