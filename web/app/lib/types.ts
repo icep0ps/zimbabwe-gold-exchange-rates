@@ -36,7 +36,8 @@ interface SuccessRatesResponse {
   rates: Rate[];
   currencies: Currency[];
   chartRates: Rate[];
-  jsonLd?: any; // Add jsonLd since it's used in HomePage
+  jsonLd?: any;
+  faqJsonLd?: any;
 }
 
 interface ErrorRatesResponse {
