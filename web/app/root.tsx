@@ -15,6 +15,7 @@ import NavigationBar from "./components/navigation-bar";
 import PushNotificationPrompt from "./components/push-notification-prompt";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "manifest", href: "/manifest.json" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -83,6 +84,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#09090b" />
         <Meta />
         <Links />
         <script

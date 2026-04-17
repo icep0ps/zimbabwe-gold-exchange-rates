@@ -7,13 +7,15 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import { Link } from "react-router";
 import { DataTable } from "~/components/data-table/data-table";
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar";
 import { DateSelector } from "~/components/date-selector";
+import { Button } from "~/components/ui/button";
 import type { Rate } from "~/lib/types";
 import { cn } from "~/lib/utils";
 import { currencies } from "country-data";
-import { CalendarIcon, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarIcon, ExternalLink, TrendingDown, TrendingUp } from "lucide-react";
 
 interface HistoryRatesDataTableProps {
   data: Rate[];
@@ -163,7 +165,21 @@ export function HistoryRatesDataTable({ data }: HistoryRatesDataTableProps) {
         </div>
       ),
       enableSorting: true,
-      enableColumnFilter: false, // Remove redundant date filter
+      enableColumnFilter: false,
+    },
+    {
+      id: "view",
+      header: "",
+      cell: ({ row }) => (
+        <Button asChild variant="ghost" size="sm">
+          <Link to={`/rates/${row.original.created_at}`}>
+            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+            View
+          </Link>
+        </Button>
+      ),
+      enableSorting: false,
+      enableHiding: false,
     },
   ];
 

@@ -1,0 +1,17 @@
+{
+  "name": "Zimbabwe Gold Exchange Rates",
+  "short_name": "ZiG Rates",
+  "description": "Track the latest official Zimbabwe Gold (ZiG) exchange rates against USD, EUR, GBP, and ZAR. Daily updates from the Reserve Bank of Zimbabwe.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
