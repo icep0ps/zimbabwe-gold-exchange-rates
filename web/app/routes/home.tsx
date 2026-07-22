@@ -130,7 +130,6 @@ export async function loader({
     const failedResponses = [
       { name: "USD rate", response: usdRateResponse },
       { name: "Current rates", response: currentRatesResponse },
-      { name: "Chart rates", response: chartRatesResponse },
       { name: "Currency list", response: allCurrenciesResponse },
     ].filter(({ response }) => !response.success);
 
@@ -209,9 +208,17 @@ export async function loader({
       ],
     };
 
+    if (!chartRatesResponse.success) {
+      logger.warn("Chart rates fetch failed, rendering page without chart data", {
+        message: (chartRatesResponse as ApiErrorResponse).message,
+      });
+    }
+
     return {
       rates: (currentRatesResponse as ApiSuccessResponse<Rate[]>).data,
-      chartRates: (chartRatesResponse as ApiSuccessResponse<Rate[]>).data,
+      chartRates: chartRatesResponse.success
+        ? (chartRatesResponse as ApiSuccessResponse<Rate[]>).data
+        : [],
       officialRate: officialRate,
       currencies: (allCurrenciesResponse as ApiSuccessResponse<Currency[]>)
         .data,

@@ -110,7 +110,6 @@ export async function loader({
     const failedResponses = [
       { name: "USD rate", response: usdRateResponse },
       { name: "Current rates", response: currentRatesResponse },
-      { name: "Chart rates", response: chartRatesResponse },
       { name: "Currency list", response: allCurrenciesResponse },
     ].filter(({ response }) => !response.success);
 
@@ -127,8 +126,9 @@ export async function loader({
         return {
           rates: [],
           officialRate: null,
-          chartRates:
-            (chartRatesResponse as ApiSuccessResponse<Rate[]>).data || [],
+          chartRates: chartRatesResponse.success
+            ? (chartRatesResponse as ApiSuccessResponse<Rate[]>).data
+            : [],
           currencies:
             (allCurrenciesResponse as ApiSuccessResponse<Currency[]>).data || [],
           referenceDate: date || undefined,
@@ -177,7 +177,9 @@ export async function loader({
 
     return {
       rates: (currentRatesResponse as ApiSuccessResponse<Rate[]>).data,
-      chartRates: (chartRatesResponse as ApiSuccessResponse<Rate[]>).data,
+      chartRates: chartRatesResponse.success
+        ? (chartRatesResponse as ApiSuccessResponse<Rate[]>).data
+        : [],
       officialRate: officialRate,
       currencies: (allCurrenciesResponse as ApiSuccessResponse<Currency[]>)
         .data,
