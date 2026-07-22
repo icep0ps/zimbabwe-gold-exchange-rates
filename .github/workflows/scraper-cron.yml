@@ -5,6 +5,21 @@ on:
     # 08:00 UTC = 10:00 CAT (Zimbabwe is UTC+2), Monday–Friday
     - cron: '0 8 * * 1-5'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Scrape mode'
+        required: false
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - batch
+      start_date:
+        description: 'Batch start date (YYYY-MM-DD) — required for batch mode'
+        required: false
+      end_date:
+        description: 'Batch end date (YYYY-MM-DD) — required for batch mode'
+        required: false
 
 jobs:
   scrape:
@@ -25,7 +40,12 @@ jobs:
         working-directory: api
 
       - name: Run rate scraper
-        run: npx tsx src/scripts/main.ts latest
+        run: |
+          if [ "${{ inputs.mode }}" = "batch" ]; then
+            npx tsx src/scripts/main.ts batch "${{ inputs.start_date }}" "${{ inputs.end_date }}"
+          else
+            npx tsx src/scripts/main.ts latest
+          fi
         working-directory: api
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
