@@ -40,19 +40,9 @@ export async function runBatchRateExtractionProcess(
     dates.push(startDateCopy);
   }
 
-  const starterPromise = Promise.resolve<ReturnType<
-    typeof runRateExtractionProcess
-  > | null>(null);
-  await dates.reduce(
-    (p, c) =>
-      p.then((res) => {
-        if (res) {
-          results.push(res);
-        }
+  for (const date of dates) {
+    results.push(await cb(date));
+  }
 
-        return cb(c);
-      }),
-    starterPromise,
-  );
   return results;
 }

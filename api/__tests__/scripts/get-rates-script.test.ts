@@ -30,12 +30,12 @@ describe("runBatchRateExtractionProcess", async () => {
   });
 
   test("return array with the same number of items as the date ranges", async () => {
-    expect(results.length).toBe(getDaysBetweenDates(startDate, endDate));
+    expect(results.length).toBe(getDaysBetweenDates(startDate, endDate) + 1);
   });
 
   test("Gets called the same number of times as the date ranges", async () => {
     expect(runRateExtractionProcess).toHaveBeenCalledTimes(
-      getDaysBetweenDates(startDate, endDate),
+      getDaysBetweenDates(startDate, endDate) + 1,
     );
   });
 

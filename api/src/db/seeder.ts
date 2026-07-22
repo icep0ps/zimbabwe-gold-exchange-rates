@@ -119,9 +119,9 @@ export async function seedRatesToDatabase(
       }
 
       if (updates.length > 0) {
-        await db.transaction(async () => {
-          await Promise.all(updates);
-        });
+        // The neon-http driver used here doesn't support interactive
+        // transactions, so these updates run as independent statements.
+        await Promise.all(updates);
         scriptLogger.info(
           `Successfully linked ${updates.length} previous rates for ${currency}.`,
         );
